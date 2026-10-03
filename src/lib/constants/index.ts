@@ -24,8 +24,7 @@ export const MODULE_NAV = {
     icon: 'Package',
     basePath: '/stock',
     items: [
-      { label: 'Productos', path: '/stock', icon: 'Package' },
-      { label: 'Nuevo Producto', path: '/stock/new', icon: 'Plus' },
+      { label: 'Inventario', path: '/stock', icon: 'Package' },
       { label: 'Movimientos', path: '/stock/movements', icon: 'ArrowLeftRight' },
       { label: 'Depósitos', path: '/stock/warehouses', icon: 'Warehouse' },
       { label: 'Alertas', path: '/stock/alerts', icon: 'AlertTriangle' },
@@ -35,6 +34,7 @@ export const MODULE_NAV = {
     label: 'Ventas',
     icon: 'ShoppingCart',
     basePath: '/sales',
+    defaultPath: '/sales/pos',
     items: [
       { label: 'Punto de Venta', path: '/sales/pos', icon: 'Monitor' },
       { label: 'Historial', path: '/sales', icon: 'History' },
@@ -47,7 +47,6 @@ export const MODULE_NAV = {
     basePath: '/customers',
     items: [
       { label: 'Lista', path: '/customers', icon: 'Users' },
-      { label: 'Nuevo Cliente', path: '/customers/new', icon: 'UserPlus' },
     ],
   },
   purchases: {
@@ -56,7 +55,6 @@ export const MODULE_NAV = {
     basePath: '/purchases',
     items: [
       { label: 'Órdenes de Compra', path: '/purchases', icon: 'ClipboardList' },
-      { label: 'Nueva Orden', path: '/purchases/new', icon: 'Plus' },
       { label: 'Proveedores', path: '/purchases/suppliers', icon: 'Building2' },
     ],
   },
@@ -76,10 +74,7 @@ export const MODULE_NAV = {
     icon: 'BarChart3',
     basePath: '/reports',
     items: [
-      { label: 'Ventas', path: '/reports/sales', icon: 'TrendingUp' },
-      { label: 'Productos', path: '/reports/products', icon: 'Package' },
-      { label: 'Márgenes', path: '/reports/margins', icon: 'PieChart' },
-      { label: 'Inventario', path: '/reports/inventory', icon: 'Archive' },
+      { label: 'Panel General', path: '/reports', icon: 'BarChart3' },
     ],
   },
 } as const

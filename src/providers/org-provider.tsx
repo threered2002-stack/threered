@@ -17,6 +17,8 @@ interface OrgContextType {
   isModuleActive: (slug: ModuleSlug) => boolean
   /** Cambia la organización activa */
   setCurrentOrgId: (orgId: string) => void
+  /** Refresca los módulos activos desde la base de datos */
+  refreshModules: () => Promise<void>
   /** Estado de carga */
   isLoading: boolean
 }
@@ -28,6 +30,7 @@ const OrgContext = createContext<OrgContextType>({
   activeModules: [],
   isModuleActive: () => false,
   setCurrentOrgId: () => {},
+  refreshModules: async () => {},
   isLoading: true,
 })
 
@@ -78,32 +81,31 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     loadOrganizations()
   }, [supabase])
 
+  const refreshModules = useCallback(async () => {
+    if (!currentOrgId) return
+    const { data } = await supabase
+      .from('organization_modules')
+      .select(`
+        *,
+        module:modules(*)
+      `)
+      .eq('organization_id', currentOrgId)
+      .eq('is_active', true)
+
+    if (data) {
+      setActiveModules(data as OrganizationModule[])
+    }
+  }, [currentOrgId, supabase])
+
   // Cargar módulos cuando cambia la org
   useEffect(() => {
-    if (!currentOrgId) return
-
-    const loadModules = async () => {
-      const { data } = await supabase
-        .from('organization_modules')
-        .select(`
-          *,
-          module:modules(*)
-        `)
-        .eq('organization_id', currentOrgId)
-        .eq('is_active', true)
-
-      if (data) {
-        setActiveModules(data as OrganizationModule[])
-      }
-    }
-
     // Guardar en localStorage
-    if (typeof window !== 'undefined') {
+    if (currentOrgId && typeof window !== 'undefined') {
       localStorage.setItem(ORG_STORAGE_KEY, currentOrgId)
     }
 
-    loadModules()
-  }, [currentOrgId, supabase])
+    refreshModules()
+  }, [currentOrgId, refreshModules])
 
   const currentMembership = organizations.find(
     (m) => m.organization_id === currentOrgId
@@ -128,6 +130,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
         activeModules,
         isModuleActive,
         setCurrentOrgId,
+        refreshModules,
         isLoading,
       }}
     >

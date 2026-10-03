@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { useOrg } from '@/providers/org-provider'
-import { getProducts } from '@/modules/stock/actions/products'
+import { getProducts, deleteProduct } from '@/modules/stock/actions/products'
 import { formatMoney } from '@/lib/utils/money'
 import { ModuleGuard } from '@/components/layout/module-guard'
 import Link from 'next/link'
-import { Plus, Search, Package, ArrowUpDown } from 'lucide-react'
+import { Plus, Search, Package, ArrowUpDown, Edit, Trash2 } from 'lucide-react'
 import type { Product } from '@/lib/types'
 
 export default function StockPage() {
@@ -42,12 +42,24 @@ function StockContent() {
     return acc + stockQty
   }, 0)
 
+  const handleDelete = async (productId: string) => {
+    if (!currentOrg) return
+    if (!confirm('¿Estás seguro de querer borrar este producto?')) return
+
+    const res = await deleteProduct(productId, currentOrg.id)
+    if (res?.error) {
+      alert(res.error)
+    } else {
+      setProducts(products.filter(p => p.id !== productId))
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Stock y Productos</h1>
+          <h1 className="text-2xl font-bold text-white">Inventario</h1>
           <p className="text-neutral-400 mt-1">
             Gestioná el inventario, precios y depósitos.
           </p>
@@ -125,6 +137,7 @@ function StockContent() {
                 <th className="px-4 py-3 font-medium text-right">Costo</th>
                 <th className="px-4 py-3 font-medium text-right">Precio Venta</th>
                 <th className="px-4 py-3 font-medium text-right">Stock</th>
+                <th className="px-4 py-3 font-medium text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-800/50">
@@ -199,6 +212,24 @@ function StockContent() {
                         >
                           {stockQty} {product.unit}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link
+                            href={`/stock/${product.id}/edit`}
+                            className="p-1.5 text-neutral-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors"
+                            title="Editar producto"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(product.id)}
+                            className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            title="Borrar producto"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )

@@ -13,9 +13,25 @@ const moduleIcons: Record<string, React.ComponentType<{ className?: string }>> =
   Package, ShoppingCart, Users, Truck, DollarSign, BarChart3,
 }
 
+import { useEffect, useState } from 'react'
+import { getDashboardStats } from '@/modules/core/actions/dashboard'
+import { formatMoney } from '@/lib/utils/money'
+
 export default function DashboardPage() {
   const { currentOrg, activeModules, isLoading } = useOrg()
   const { profile } = useAuth()
+  const [stats, setStats] = useState({
+    salesTodayCents: 0,
+    productsCount: 0,
+    customersCount: 0,
+    alertsCount: 0
+  })
+
+  useEffect(() => {
+    if (currentOrg) {
+      getDashboardStats(currentOrg.id).then(setStats)
+    }
+  }, [currentOrg])
 
   if (isLoading) {
     return (
@@ -75,10 +91,10 @@ export default function DashboardPage() {
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Ventas Hoy', value: '$0', icon: ShoppingCart, color: 'from-emerald-500 to-green-600', trend: '+0%' },
-          { label: 'Productos', value: '0', icon: Package, color: 'from-blue-500 to-indigo-600', trend: '' },
-          { label: 'Clientes', value: '0', icon: Users, color: 'from-amber-500 to-orange-600', trend: '' },
-          { label: 'Alertas Stock', value: '0', icon: AlertTriangle, color: 'from-red-500 to-rose-600', trend: '' },
+          { label: 'Ventas Hoy', value: formatMoney(stats.salesTodayCents), icon: ShoppingCart, color: 'from-emerald-500 to-green-600', trend: '' },
+          { label: 'Productos', value: stats.productsCount.toString(), icon: Package, color: 'from-blue-500 to-indigo-600', trend: '' },
+          { label: 'Clientes', value: stats.customersCount.toString(), icon: Users, color: 'from-amber-500 to-orange-600', trend: '' },
+          { label: 'Alertas Stock', value: stats.alertsCount.toString(), icon: AlertTriangle, color: 'from-red-500 to-rose-600', trend: '' },
         ].map((stat) => (
           <div
             key={stat.label}
@@ -114,7 +130,7 @@ export default function DashboardPage() {
               return (
                 <Link
                   key={mod.id}
-                  href={navConfig?.basePath ?? '/'}
+                  href={(navConfig as any)?.defaultPath ?? navConfig?.basePath ?? '/'}
                   className="group bg-neutral-900/50 border border-neutral-800 rounded-2xl p-5 hover:border-violet-500/30 hover:bg-neutral-900/80 transition-all duration-200"
                 >
                   <div className="flex items-center gap-3 mb-2">

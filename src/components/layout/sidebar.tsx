@@ -153,22 +153,36 @@ export function Sidebar() {
 
           return (
             <div key={mod.slug}>
-              <button
-                onClick={() => toggleModule(mod.slug)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+              <div
+                className={`flex items-center justify-between w-full rounded-xl text-sm font-medium transition-all ${
                   isModuleActive(mod.basePath)
-                    ? 'text-white'
+                    ? 'text-white bg-neutral-800/20'
                     : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
                 }`}
               >
-                <IconComponent name={mod.icon} className="w-4.5 h-4.5" />
-                <span className="flex-1 text-left">{mod.label}</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 text-neutral-500 transition-transform ${
-                    isExpanded ? 'rotate-180' : ''
-                  }`}
-                />
-              </button>
+                <Link
+                  href={(mod as any).defaultPath || mod.basePath}
+                  className="flex flex-1 items-center gap-3 px-3 py-2"
+                  onClick={() => {
+                    if (!expandedModules.includes(mod.slug)) {
+                      setExpandedModules(prev => [...prev, mod.slug])
+                    }
+                  }}
+                >
+                  <IconComponent name={mod.icon} className="w-4.5 h-4.5" />
+                  <span className="text-left">{mod.label}</span>
+                </Link>
+                <button
+                  onClick={() => toggleModule(mod.slug)}
+                  className="p-2 mr-1 rounded-lg hover:bg-neutral-700/50 transition-colors"
+                >
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-neutral-500 transition-transform ${
+                      isExpanded ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+              </div>
 
               {isExpanded && (
                 <div className="ml-4 pl-3 border-l border-neutral-800 space-y-0.5 mt-0.5">
@@ -196,7 +210,7 @@ export function Sidebar() {
       {/* User Profile / Footer */}
       <div className="p-3 border-t border-neutral-800">
         <Link
-          href="/org/settings"
+          href="/settings"
           className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-neutral-400 hover:text-white hover:bg-neutral-800/50 transition-all"
         >
           <Settings className="w-4 h-4" />

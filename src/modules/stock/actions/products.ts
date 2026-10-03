@@ -25,6 +25,27 @@ export async function getProducts(orgId: string) {
   return data
 }
 
+export async function getProductById(id: string, orgId: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('products')
+    .select(`
+      *,
+      category:categories(name)
+    `)
+    .eq('id', id)
+    .eq('organization_id', orgId)
+    .single()
+
+  if (error) {
+    console.error('Error fetching product:', error)
+    return null
+  }
+
+  return data
+}
+
 export async function getCategories(orgId: string) {
   const supabase = await createClient()
 
@@ -61,6 +82,47 @@ export async function createProduct(orgId: string, input: any) {
   if (error) {
     console.error('Error creating product:', error)
     return { error: 'Error al crear el producto' }
+  }
+
+  revalidatePath('/stock')
+  return { data }
+}
+
+export async function updateProduct(id: string, orgId: string, input: any) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('products')
+    .update(input)
+    .eq('id', id)
+    .eq('organization_id', orgId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating product:', error)
+    return { error: 'Error al actualizar el producto' }
+  }
+
+  revalidatePath('/stock')
+  return { data }
+}
+
+export async function deleteProduct(id: string, orgId: string) {
+  const supabase = await createClient()
+
+  // Soft delete setting deleted_at to now
+  const { data, error } = await supabase
+    .from('products')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('organization_id', orgId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error deleting product:', error)
+    return { error: 'Error al eliminar el producto' }
   }
 
   revalidatePath('/stock')

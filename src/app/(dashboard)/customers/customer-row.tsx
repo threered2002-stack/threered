@@ -1,7 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { Mail, Phone, ShoppingCart, ChevronDown, AlignLeft } from 'lucide-react'
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { Mail, Phone, ShoppingCart, ChevronDown, AlignLeft, Trash2 } from 'lucide-react'
+import { deleteCustomer } from '@/modules/customers/actions/customers'
+import { useOrg } from '@/providers/org-provider'
 
 interface CustomerRowProps {
   customer: any
@@ -9,6 +12,24 @@ interface CustomerRowProps {
 
 export function CustomerRow({ customer: c }: CustomerRowProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const router = useRouter()
+  const { currentOrg } = useOrg()
+  const [isDeleting, startTransition] = useTransition()
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!currentOrg) return
+    if (confirm('¿Estás seguro que querés eliminar este cliente?')) {
+      startTransition(async () => {
+        const { error } = await deleteCustomer(c.id, currentOrg.id)
+        if (error) {
+          alert(error)
+        } else {
+          router.refresh()
+        }
+      })
+    }
+  }
 
   const formatCurrency = (cents: number) => {
     return new Intl.NumberFormat('es-AR', {
@@ -61,7 +82,7 @@ export function CustomerRow({ customer: c }: CustomerRowProps) {
           </div>
         </td>
         <td className="px-6 py-4 text-right">
-          <div className="flex items-center justify-end gap-3">
+          <div className="flex items-center justify-end gap-4">
             <div>
               <p className="font-semibold text-white">{formatCurrency(c.total_spent_cents)}</p>
               {c.last_purchase_at && (
@@ -70,6 +91,28 @@ export function CustomerRow({ customer: c }: CustomerRowProps) {
                 </p>
               )}
             </div>
+            
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  router.push(`/customers/${c.id}/edit`)
+                }}
+                className="p-1.5 text-neutral-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors"
+                title="Editar cliente"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                title="Eliminar cliente"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+
             <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
           </div>
         </td>

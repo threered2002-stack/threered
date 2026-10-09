@@ -117,7 +117,7 @@ export function ManualDebtForm({ customers, suppliers }: { customers: any[], sup
               >
                 <option value="">Seleccionar {type === 'receivable' ? 'cliente' : 'proveedor'}...</option>
                 {type === 'receivable' 
-                  ? customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)
+                  ? customers.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)
                   : suppliers.map(s => <option key={s.id} value={s.id}>{s.name} {s.trade_name ? `(${s.trade_name})` : ''}</option>)
                 }
               </select>

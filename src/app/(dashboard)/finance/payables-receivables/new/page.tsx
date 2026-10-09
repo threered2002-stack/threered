@@ -21,7 +21,7 @@ export default async function NewDebtPage() {
 
   // Fetch customers and suppliers
   const [{ data: customers }, { data: suppliers }] = await Promise.all([
-    supabase.from('customers').select('id, name').eq('organization_id', membership.organization_id).order('name'),
+    supabase.from('v_customer_summary').select('id, full_name').eq('organization_id', membership.organization_id).order('first_name'),
     supabase.from('suppliers').select('id, name, trade_name').eq('organization_id', membership.organization_id).order('name')
   ])
 

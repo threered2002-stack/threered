@@ -73,3 +73,71 @@ export async function createCustomer(orgId: string, input: {
   revalidatePath('/customers')
   return { data }
 }
+
+export async function getCustomerById(id: string, orgId: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('customers')
+    .select('*')
+    .eq('id', id)
+    .eq('organization_id', orgId)
+    .single()
+
+  if (error) {
+    console.error('Error fetching customer by id:', error)
+    return null
+  }
+
+  return data
+}
+
+export async function updateCustomer(id: string, orgId: string, input: any) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'No autorizado' }
+
+  // Clean empty strings to null or undefined
+  const cleanedInput = Object.fromEntries(
+    Object.entries(input).map(([k, v]) => [k, v === '' ? null : v])
+  )
+
+  const { data, error } = await supabase
+    .from('customers')
+    .update({ ...cleanedInput })
+    .eq('id', id)
+    .eq('organization_id', orgId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating customer:', error)
+    return { error: 'Error al actualizar el cliente.' }
+  }
+
+  revalidatePath('/customers')
+  return { data }
+}
+
+export async function deleteCustomer(id: string, orgId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'No autorizado' }
+
+  const { error } = await supabase
+    .from('customers')
+    .delete()
+    .eq('id', id)
+    .eq('organization_id', orgId)
+
+  if (error) {
+    console.error('Error deleting customer:', error)
+    return { error: 'Error al eliminar el cliente. Verifica que no tenga operaciones asociadas.' }
+  }
+
+  revalidatePath('/customers')
+  return { success: true }
+}
+

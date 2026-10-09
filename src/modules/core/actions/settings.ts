@@ -62,3 +62,34 @@ export async function toggleModule(orgId: string, moduleId: string, currentlyAct
   
   return { success: true }
 }
+
+export async function updateOrganizationSettings(orgId: string, payload: any) {
+  const supabase = await createClient()
+
+  // First fetch the existing settings to merge them
+  const { data: org, error: fetchError } = await supabase
+    .from('organizations')
+    .select('settings')
+    .eq('id', orgId)
+    .single()
+
+  if (fetchError) {
+    console.error('Error fetching org settings:', fetchError)
+    return { error: 'No se pudo obtener la configuración' }
+  }
+
+  const newSettings = { ...org.settings, ...payload }
+
+  const { error } = await supabase
+    .from('organizations')
+    .update({ settings: newSettings })
+    .eq('id', orgId)
+
+  if (error) {
+    console.error('Error updating settings:', error)
+    return { error: 'Error al guardar la configuración' }
+  }
+
+  revalidatePath('/settings')
+  return { success: true, settings: newSettings }
+}

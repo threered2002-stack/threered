@@ -182,3 +182,73 @@ export async function getAccountsReceivable(orgId: string) {
 
   return data
 }
+
+export async function createAccountPayable(orgId: string, input: {
+  supplier_id: string;
+  amount_cents: number;
+  due_date: string;
+  notes?: string;
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'No autorizado' }
+
+  const { data, error } = await supabase
+    .from('accounts_payable')
+    .insert({
+      organization_id: orgId,
+      supplier_id: input.supplier_id,
+      amount_cents: input.amount_cents,
+      paid_cents: 0,
+      due_date: input.due_date,
+      status: 'pending',
+      notes: input.notes,
+      created_by: user.id
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating AP:', error)
+    return { error: 'Error al registrar la cuenta por pagar' }
+  }
+
+  revalidatePath('/finance/payables-receivables')
+  return { data }
+}
+
+export async function createAccountReceivable(orgId: string, input: {
+  customer_id: string;
+  amount_cents: number;
+  due_date: string;
+  notes?: string;
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'No autorizado' }
+
+  const { data, error } = await supabase
+    .from('accounts_receivable')
+    .insert({
+      organization_id: orgId,
+      customer_id: input.customer_id,
+      amount_cents: input.amount_cents,
+      received_cents: 0,
+      due_date: input.due_date,
+      status: 'pending',
+      notes: input.notes,
+      created_by: user.id
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating AR:', error)
+    return { error: 'Error al registrar la cuenta por cobrar' }
+  }
+
+  revalidatePath('/finance/payables-receivables')
+  return { data }
+}

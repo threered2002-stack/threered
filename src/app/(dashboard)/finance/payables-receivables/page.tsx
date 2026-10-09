@@ -1,7 +1,8 @@
 import { getAccountsPayable, getAccountsReceivable } from '@/modules/finance/actions/finance'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { FileText, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react'
+import Link from 'next/link'
+import { FileText, ArrowUpRight, ArrowDownRight, Clock, Plus } from 'lucide-react'
 import { ModuleGuard } from '@/components/layout/module-guard'
 
 export default async function PayablesReceivablesPage() {
@@ -54,12 +55,22 @@ export default async function PayablesReceivablesPage() {
     <ModuleGuard module="finance">
       <div className="space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <FileText className="w-6 h-6 text-violet-400" />
-            Por Pagar y Cobrar
-          </h1>
-          <p className="text-neutral-400 mt-1">Gestión de deudas a proveedores y créditos de clientes.</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+              <FileText className="w-6 h-6 text-violet-400" />
+              Por Pagar y Cobrar
+            </h1>
+            <p className="text-neutral-400 mt-1">Gestión de deudas a proveedores y créditos de clientes.</p>
+          </div>
+          
+          <Link 
+            href="/finance/payables-receivables/new"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-violet-500/20"
+          >
+            <Plus className="w-4 h-4" />
+            Nueva Deuda/Cobro
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

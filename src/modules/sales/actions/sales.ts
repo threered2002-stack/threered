@@ -53,9 +53,41 @@ export async function createSale(orgId: string, input: {
     return { success: false, error: error.message }
   }
 
+  // Integración con Finanzas: Si el pago fue a cuenta corriente, crear la deuda
+  const hasCtaCte = input.payments.find(p => p.reference === 'cuenta_corriente')
+  if (hasCtaCte && input.customer_id) {
+    // Calculamos la fecha de vencimiento a 30 días por defecto
+    const dueDate = new Date()
+    dueDate.setDate(dueDate.getDate() + 30)
+
+    const supabaseAdmin = await createClient() // Necesario para reusar el client en otra acción si llamamos el servicio
+    const { data: userResponse } = await supabaseAdmin.auth.getUser()
+    
+    if (userResponse?.user) {
+      const { error: arError } = await supabaseAdmin
+        .from('accounts_receivable')
+        .insert({
+          organization_id: orgId,
+          customer_id: input.customer_id,
+          amount_cents: hasCtaCte.amount_cents,
+          received_cents: 0,
+          due_date: dueDate.toISOString().split('T')[0],
+          status: 'pending',
+          notes: `Venta generada desde el Punto de Venta (Referencia automática)`,
+          created_by: userResponse.user.id
+        })
+
+      if (arError) {
+        console.error('Error al registrar Cuenta por Cobrar:', arError)
+        // No fallamos la venta si falló la cuenta por cobrar, pero idealmente sería transaccional
+      }
+    }
+  }
+
   revalidatePath('/sales')
   revalidatePath('/stock')
   revalidatePath('/customers')
+  revalidatePath('/finance/payables-receivables')
   
   return { success: true, data }
 }

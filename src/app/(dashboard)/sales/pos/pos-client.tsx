@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Search, Plus, Minus, Trash2, User, CreditCard, Banknote, ShoppingCart, ArrowRight } from 'lucide-react'
 import { createSale } from '@/modules/sales/actions/sales'
 
@@ -13,10 +14,11 @@ interface POSClientProps {
 }
 
 export function POSClient({ products, customers, warehouses, userId, orgId }: POSClientProps) {
+  const router = useRouter()
   const [cart, setCart] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'transfer'>('cash')
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'transfer' | 'account'>('cash')
 
   const defaultWarehouse = warehouses.find(w => w.is_default) || warehouses[0]
 
@@ -32,6 +34,10 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
     setCart(prev => {
       const existing = prev.find(item => item.product_id === product.product_id)
       if (existing) {
+        if (existing.quantity >= product.current_stock) {
+          alert('No hay más stock disponible para este producto.')
+          return prev
+        }
         return prev.map(item => 
           item.product_id === product.product_id 
             ? { ...item, quantity: item.quantity + 1 }
@@ -44,6 +50,7 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
         unit_price_cents: product.sale_price_cents,
         unit_cost_cents: product.cost_price_cents,
         quantity: 1,
+        current_stock: product.current_stock, // Store max stock for validation
         discount_cents: 0,
         discount_percent: 0,
       }]
@@ -54,6 +61,10 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
     setCart(prev => prev.map(item => {
       if (item.product_id === productId) {
         const newQuantity = item.quantity + delta
+        if (newQuantity > item.current_stock) {
+          alert('No hay más stock disponible para este producto.')
+          return item
+        }
         return newQuantity > 0 ? { ...item, quantity: newQuantity } : item
       }
       return item
@@ -65,8 +76,9 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
   }
 
   const filteredProducts = products.filter(p => 
-    p.product_name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.sku && p.sku.toLowerCase().includes(search.toLowerCase()))
+    p.current_stock > 0 && // Only show products with stock
+    (p.product_name.toLowerCase().includes(search.toLowerCase()) ||
+    (p.sku && p.sku.toLowerCase().includes(search.toLowerCase())))
   )
 
   const subtotal = cart.reduce((acc, item) => acc + (item.unit_price_cents * item.quantity), 0)
@@ -76,6 +88,11 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
 
   const handleCheckout = async () => {
     if (cart.length === 0 || !defaultWarehouse) return
+    if (paymentMethod === 'account' && !selectedCustomer) {
+      alert('Debe seleccionar un cliente para cobrar con Cuenta Corriente.')
+      return
+    }
+
     setIsProcessing(true)
 
     try {
@@ -90,9 +107,9 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
         items: cart,
         payments: [
           {
-            payment_method: paymentMethod,
+            payment_method: paymentMethod === 'account' ? 'other' : paymentMethod,
             amount_cents: total,
-            reference: 'POS'
+            reference: paymentMethod === 'account' ? 'cuenta_corriente' : 'POS'
           }
         ]
       })
@@ -102,6 +119,7 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
         setCart([])
         setSelectedCustomer(null)
         setSearch('')
+        router.refresh()
       } else {
         alert('Error al registrar la venta: ' + res.error)
       }
@@ -223,7 +241,7 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
         {/* Payment Methods */}
         <div className="p-4 border-t border-neutral-800/80 bg-neutral-900/60">
           <p className="text-xs text-neutral-400 mb-2 font-medium uppercase tracking-wider">Método de pago</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             <button
               onClick={() => setPaymentMethod('cash')}
               className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all ${
@@ -233,7 +251,7 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
               }`}
             >
               <Banknote className="w-5 h-5 mb-1" />
-              <span className="text-[10px] font-medium">Efectivo</span>
+              <span className="text-[10px] font-medium text-center">Efectivo</span>
             </button>
             <button
               onClick={() => setPaymentMethod('card')}
@@ -244,7 +262,7 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
               }`}
             >
               <CreditCard className="w-5 h-5 mb-1" />
-              <span className="text-[10px] font-medium">Tarjeta</span>
+              <span className="text-[10px] font-medium text-center">Tarjeta</span>
             </button>
             <button
               onClick={() => setPaymentMethod('transfer')}
@@ -255,7 +273,18 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
               }`}
             >
               <ArrowRight className="w-5 h-5 mb-1" />
-              <span className="text-[10px] font-medium">Transfer.</span>
+              <span className="text-[10px] font-medium text-center">Transfer.</span>
+            </button>
+            <button
+              onClick={() => setPaymentMethod('account')}
+              className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all ${
+                paymentMethod === 'account' 
+                  ? 'bg-orange-500/10 border-orange-500/50 text-orange-400' 
+                  : 'bg-neutral-800/50 border-neutral-700 text-neutral-400 hover:bg-neutral-800'
+              }`}
+            >
+              <User className="w-5 h-5 mb-1" />
+              <span className="text-[10px] font-medium text-center leading-tight">Cta. Cte.</span>
             </button>
           </div>
         </div>

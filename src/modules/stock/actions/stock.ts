@@ -76,3 +76,116 @@ export async function getCurrentStock(orgId: string) {
 
   return data
 }
+
+export async function createStockMovement(orgId: string, input: {
+  product_id: string;
+  warehouse_id: string;
+  movement_type: string;
+  quantity: number;
+  notes?: string;
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'No autorizado' }
+
+  // Fetch unit cost from product to store in the movement
+  const { data: product } = await supabase
+    .from('products')
+    .select('cost_price_cents')
+    .eq('id', input.product_id)
+    .single()
+
+  const unit_cost_cents = product?.cost_price_cents || 0
+
+  const { data, error } = await supabase
+    .from('stock_movements')
+    .insert({
+      organization_id: orgId,
+      product_id: input.product_id,
+      warehouse_id: input.warehouse_id,
+      movement_type: input.movement_type,
+      quantity: input.quantity,
+      unit_cost_cents,
+      reference_type: 'manual',
+      notes: input.notes,
+      created_by: user.id
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating stock movement:', error)
+    return { error: 'Error al registrar el movimiento de stock.' }
+  }
+
+  revalidatePath('/stock')
+  revalidatePath('/stock/movements')
+  return { success: true, data }
+}
+
+export async function createWarehouse(orgId: string, input: {
+  name: string
+  address?: string
+  is_default?: boolean
+}) {
+  const supabase = await createClient()
+
+  if (input.is_default) {
+    // Unset other defaults first
+    await supabase.from('warehouses')
+      .update({ is_default: false })
+      .eq('organization_id', orgId)
+  }
+
+  const { data, error } = await supabase
+    .from('warehouses')
+    .insert({
+      organization_id: orgId,
+      name: input.name,
+      address: input.address,
+      is_default: input.is_default || false,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating warehouse:', error)
+    return { error: 'Error al crear el depósito.' }
+  }
+
+  revalidatePath('/stock/warehouses')
+  return { success: true, data }
+}
+
+export async function updateWarehouse(id: string, orgId: string, input: {
+  name?: string
+  address?: string
+  is_default?: boolean
+  is_active?: boolean
+}) {
+  const supabase = await createClient()
+
+  if (input.is_default) {
+    // Unset other defaults first
+    await supabase.from('warehouses')
+      .update({ is_default: false })
+      .eq('organization_id', orgId)
+  }
+
+  const { data, error } = await supabase
+    .from('warehouses')
+    .update(input)
+    .eq('id', id)
+    .eq('organization_id', orgId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating warehouse:', error)
+    return { error: 'Error al actualizar el depósito.' }
+  }
+
+  revalidatePath('/stock/warehouses')
+  return { success: true, data }
+}

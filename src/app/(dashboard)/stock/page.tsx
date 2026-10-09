@@ -1,34 +1,53 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useOrg } from '@/providers/org-provider'
 import { getProducts, deleteProduct } from '@/modules/stock/actions/products'
+import { getWarehouses } from '@/modules/stock/actions/stock'
 import { formatMoney } from '@/lib/utils/money'
 import { ModuleGuard } from '@/components/layout/module-guard'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Plus, Search, Package, ArrowUpDown, Edit, Trash2 } from 'lucide-react'
 import type { Product } from '@/lib/types'
+import { AdjustStockModal } from './adjust-stock-modal'
+import { EditProductModal } from './edit-product-modal'
 
 export default function StockPage() {
   return (
     <ModuleGuard module="stock">
-      <StockContent />
+      <Suspense fallback={<div className="p-8 text-center text-neutral-500">Cargando inventario...</div>}>
+        <StockContent />
+      </Suspense>
     </ModuleGuard>
   )
 }
 
 function StockContent() {
   const { currentOrg } = useOrg()
+  const searchParams = useSearchParams()
+  const warehouseId = searchParams.get('warehouse_id')
+  
   const [products, setProducts] = useState<Product[]>([])
+  const [warehouses, setWarehouses] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+
+  const loadData = async (orgId: string) => {
+    const [productsData, warehousesData] = await Promise.all([
+      getProducts(orgId),
+      getWarehouses(orgId)
+    ])
+    setProducts(productsData as any)
+    setWarehouses(warehousesData)
+    setIsLoading(false)
+  }
 
   useEffect(() => {
     if (currentOrg) {
-      getProducts(currentOrg.id).then((data) => {
-        setProducts(data as any)
-        setIsLoading(false)
-      })
+      loadData(currentOrg.id)
     }
   }, [currentOrg])
 
@@ -37,8 +56,13 @@ function StockContent() {
     (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
+  const selectedWarehouse = warehouses.find(w => w.id === warehouseId)
+
   const totalStock = products.reduce((acc, p) => {
-    const stockQty = p.stock?.reduce((sum, s) => sum + s.quantity, 0) || 0
+    const stockQty = p.stock?.reduce((sum, s) => {
+      if (warehouseId && s.warehouse_id !== warehouseId) return sum
+      return sum + s.quantity
+    }, 0) || 0
     return acc + stockQty
   }, 0)
 
@@ -56,21 +80,54 @@ function StockContent() {
 
   return (
     <div className="space-y-6">
+      <AdjustStockModal 
+        product={adjustingProduct} 
+        warehouses={warehouses}
+        preselectedWarehouseId={warehouseId}
+        isOpen={!!adjustingProduct} 
+        onClose={() => {
+          setAdjustingProduct(null)
+          if (currentOrg) loadData(currentOrg.id) // Reload to get updated stock
+        }} 
+      />
+      <EditProductModal 
+        product={editingProduct} 
+        isOpen={!!editingProduct} 
+        onClose={() => {
+          setEditingProduct(null)
+          if (currentOrg) loadData(currentOrg.id) // Reload to get updated product data
+        }} 
+      />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Inventario</h1>
+          <h1 className="text-2xl font-bold text-white">
+            Inventario {selectedWarehouse && <span className="text-violet-400">({selectedWarehouse.name})</span>}
+          </h1>
           <p className="text-neutral-400 mt-1">
-            Gestioná el inventario, precios y depósitos.
+            {selectedWarehouse 
+              ? `Viendo el inventario específico para ${selectedWarehouse.name}.` 
+              : 'Gestioná el inventario global, precios y depósitos.'}
           </p>
         </div>
-        <Link
-          href="/stock/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20 shrink-0"
-        >
-          <Plus className="w-5 h-5" />
-          Nuevo Producto
-        </Link>
+        <div className="flex items-center gap-3 shrink-0">
+          {warehouseId && (
+            <Link 
+              href="/stock"
+              className="px-4 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white font-medium rounded-xl transition-colors text-sm"
+            >
+              Ver Global
+            </Link>
+          )}
+          <Link
+            href="/stock/new"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20"
+          >
+            <Plus className="w-5 h-5" />
+            Nuevo Producto
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
@@ -89,7 +146,7 @@ function StockContent() {
             <div className="p-2.5 bg-emerald-500/10 rounded-lg">
               <Package className="w-5 h-5 text-emerald-400" />
             </div>
-            <p className="text-sm font-medium text-neutral-400">Unidades en Stock</p>
+            <p className="text-sm font-medium text-neutral-400">Unidades en Stock {selectedWarehouse ? 'Local' : 'Total'}</p>
           </div>
           <p className="text-3xl font-bold text-white">{totalStock}</p>
         </div>
@@ -98,12 +155,15 @@ function StockContent() {
             <div className="p-2.5 bg-violet-500/10 rounded-lg">
               <Search className="w-5 h-5 text-violet-400" />
             </div>
-            <p className="text-sm font-medium text-neutral-400">Valorización</p>
+            <p className="text-sm font-medium text-neutral-400">Valorización {selectedWarehouse ? 'Local' : 'Total'}</p>
           </div>
           <p className="text-3xl font-bold text-white">
             {formatMoney(
               products.reduce((acc, p) => {
-                const stockQty = p.stock?.reduce((sum, s) => sum + s.quantity, 0) || 0
+                const stockQty = p.stock?.reduce((sum, s) => {
+                  if (warehouseId && s.warehouse_id !== warehouseId) return sum
+                  return sum + s.quantity
+                }, 0) || 0
                 return acc + (stockQty * p.cost_price_cents)
               }, 0)
             )}
@@ -143,7 +203,7 @@ function StockContent() {
             <tbody className="divide-y divide-neutral-800/50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-neutral-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-neutral-500">
                     <div className="flex justify-center items-center gap-3">
                       <svg className="animate-spin h-5 w-5 text-violet-500" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -155,13 +215,16 @@ function StockContent() {
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-neutral-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-neutral-500">
                     No se encontraron productos.
                   </td>
                 </tr>
               ) : (
                 filteredProducts.map((product) => {
-                  const stockQty = product.stock?.reduce((sum, s) => sum + s.quantity, 0) || 0
+                  const stockQty = product.stock?.reduce((sum, s) => {
+                    if (warehouseId && s.warehouse_id !== warehouseId) return sum
+                    return sum + s.quantity
+                  }, 0) || 0
                   return (
                     <tr
                       key={product.id}
@@ -215,13 +278,20 @@ function StockContent() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Link
-                            href={`/stock/${product.id}/edit`}
+                          <button
+                            onClick={() => setAdjustingProduct(product)}
+                            className="p-1.5 text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
+                            title="Ajustar Stock"
+                          >
+                            <ArrowUpDown className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setEditingProduct(product)}
                             className="p-1.5 text-neutral-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors"
                             title="Editar producto"
                           >
                             <Edit className="w-4 h-4" />
-                          </Link>
+                          </button>
                           <button
                             onClick={() => handleDelete(product.id)}
                             className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"

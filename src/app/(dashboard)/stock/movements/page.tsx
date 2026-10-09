@@ -1,6 +1,7 @@
 import { getStockMovements } from '@/modules/stock/actions/stock'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { ArrowLeftRight, Download, Filter, Search } from 'lucide-react'
 import { ModuleGuard } from '@/components/layout/module-guard'
 import { MOVEMENT_TYPES } from '@/lib/constants'

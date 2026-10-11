@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, Minus, Trash2, User, CreditCard, Banknote, ShoppingCart, ArrowRight } from 'lucide-react'
+import { Search, Plus, Minus, Trash2, User, CreditCard, Banknote, ShoppingCart, ArrowRight, Package } from 'lucide-react'
 import { createSale } from '@/modules/sales/actions/sales'
 
 interface POSClientProps {
@@ -76,6 +76,7 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
   }
 
   const filteredProducts = products.filter(p => 
+    p.warehouse_id === defaultWarehouse?.id && // Filter by active warehouse
     p.current_stock > 0 && // Only show products with stock
     (p.product_name.toLowerCase().includes(search.toLowerCase()) ||
     (p.sku && p.sku.toLowerCase().includes(search.toLowerCase())))
@@ -142,34 +143,56 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
               placeholder="Buscar productos por nombre o SKU..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all placeholder:text-neutral-600 text-lg"
+              className="w-full pl-10 pr-4 py-3 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all placeholder:text-neutral-600 text-lg"
             />
           </div>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredProducts.map(p => (
               <button
                 key={p.product_id}
                 onClick={() => addToCart(p)}
-                className="bg-neutral-800/40 hover:bg-neutral-800 border border-neutral-700/50 rounded-xl p-4 text-left transition-colors flex flex-col h-full"
+                className="group relative bg-neutral-900 border border-neutral-800 rounded-2xl p-4 text-left transition-all hover:bg-neutral-800 hover:border-red-500/30 hover:shadow-lg hover:shadow-red-500/10 hover:-translate-y-1 flex flex-col h-full overflow-hidden"
               >
-                <div className="flex-1">
-                  <h3 className="text-white font-medium line-clamp-2 leading-tight">{p.product_name}</h3>
-                  <p className="text-xs text-neutral-500 mt-1">{p.sku || 'Sin SKU'}</p>
+                {/* Plus icon on hover */}
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all translate-x-2 -translate-y-2 group-hover:translate-x-0 group-hover:translate-y-0 bg-red-500/20 text-red-400 p-1.5 rounded-lg border border-red-500/30">
+                  <Plus className="w-4 h-4" />
                 </div>
-                <div className="mt-3 flex items-end justify-between">
-                  <p className="text-violet-400 font-bold text-lg">{formatCurrency(p.sale_price_cents)}</p>
-                  <span className="text-xs text-neutral-400 bg-neutral-900 px-2 py-1 rounded">
-                    Stock: {p.current_stock}
-                  </span>
+                
+                <div className="w-12 h-12 rounded-xl bg-neutral-800 flex items-center justify-center mb-4 border border-neutral-700/50 group-hover:scale-110 transition-transform duration-300 group-hover:bg-red-500/10 group-hover:border-red-500/20">
+                  <Package className="w-6 h-6 text-neutral-400 group-hover:text-red-400 transition-colors" />
+                </div>
+                
+                <div className="flex-1">
+                  <h3 className="text-white font-medium line-clamp-2 leading-tight group-hover:text-red-50 transition-colors">{p.product_name}</h3>
+                  <p className="text-xs text-neutral-500 mt-1.5 font-mono">{p.sku || 'Sin SKU'}</p>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-neutral-800/50 flex items-end justify-between">
+                  <div>
+                    <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Precio</p>
+                    <p className="text-red-400 font-bold text-lg leading-none">{formatCurrency(p.sale_price_cents)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Stock</p>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
+                      p.current_stock > 10 
+                        ? 'bg-emerald-500/10 text-emerald-400' 
+                        : 'bg-amber-500/10 text-amber-400'
+                    }`}>
+                      {p.current_stock}
+                    </span>
+                  </div>
                 </div>
               </button>
             ))}
             {filteredProducts.length === 0 && (
-              <div className="col-span-full py-12 text-center text-neutral-500">
-                No se encontraron productos
+              <div className="col-span-full py-20 flex flex-col items-center justify-center text-neutral-500 bg-neutral-900/20 rounded-2xl border border-neutral-800/50 border-dashed">
+                <Package className="w-16 h-16 mb-4 opacity-20" />
+                <p className="text-xl font-medium text-white/70">No se encontraron productos</p>
+                <p className="text-sm mt-2 max-w-sm text-center">Revisá la búsqueda o asegurate de que el producto tenga stock disponible en este depósito.</p>
               </div>
             )}
           </div>
@@ -180,7 +203,7 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
       <div className="w-full lg:w-96 flex flex-col bg-neutral-900/40 border border-neutral-800/80 rounded-2xl overflow-hidden shrink-0">
         <div className="p-4 border-b border-neutral-800/80 bg-neutral-900/80">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-violet-400" />
+            <ShoppingCart className="w-5 h-5 text-red-400" />
             Venta Actual
           </h2>
         </div>
@@ -192,11 +215,13 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
             <select
               value={selectedCustomer || ''}
               onChange={(e) => setSelectedCustomer(e.target.value || null)}
-              className="w-full pl-9 pr-4 py-2.5 bg-neutral-800/50 border border-neutral-700 rounded-xl text-white appearance-none focus:ring-2 focus:ring-violet-500/40 transition-all text-sm"
+              className="w-full pl-9 pr-4 py-2.5 bg-neutral-800/50 border border-neutral-700 rounded-xl text-white appearance-none focus:ring-2 focus:ring-red-500/40 transition-all text-sm"
             >
               <option value="">Consumidor Final</option>
               {customers.map(c => (
-                <option key={c.id} value={c.id}>{c.full_name}</option>
+                <option key={c.id} value={c.id}>
+                  {c.full_name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Cliente'}
+                </option>
               ))}
             </select>
           </div>
@@ -221,7 +246,7 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
                     </button>
                   </div>
                   <div className="flex justify-between items-center">
-                    <p className="text-violet-400 font-bold">{formatCurrency(item.unit_price_cents * item.quantity)}</p>
+                    <p className="text-red-400 font-bold">{formatCurrency(item.unit_price_cents * item.quantity)}</p>
                     <div className="flex items-center gap-3 bg-neutral-900 rounded-lg p-1">
                       <button onClick={() => updateQuantity(item.product_id, -1)} className="p-1 hover:bg-neutral-800 rounded-md text-neutral-400 hover:text-white transition-colors">
                         <Minus className="w-3.5 h-3.5" />
@@ -268,7 +293,7 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
               onClick={() => setPaymentMethod('transfer')}
               className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all ${
                 paymentMethod === 'transfer' 
-                  ? 'bg-violet-500/10 border-violet-500/50 text-violet-400' 
+                  ? 'bg-red-500/10 border-red-500/50 text-red-400' 
                   : 'bg-neutral-800/50 border-neutral-700 text-neutral-400 hover:bg-neutral-800'
               }`}
             >
@@ -298,7 +323,7 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
           <button
             onClick={handleCheckout}
             disabled={cart.length === 0 || isProcessing}
-            className="w-full py-4 bg-violet-600 hover:bg-violet-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-violet-500/20 disabled:shadow-none flex items-center justify-center gap-2 text-lg"
+            className="w-full py-4 bg-red-600 hover:bg-red-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-red-500/20 disabled:shadow-none flex items-center justify-center gap-2 text-lg"
           >
             {isProcessing ? 'Procesando...' : 'Confirmar Pago'}
             {!isProcessing && <ArrowRight className="w-5 h-5" />}

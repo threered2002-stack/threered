@@ -138,7 +138,7 @@ function NewTransactionContent() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-1.5 flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-violet-400" />
+                  <DollarSign className="w-4 h-4 text-red-400" />
                   Monto *
                 </label>
                 <div className="relative">
@@ -151,7 +151,7 @@ function NewTransactionContent() {
                     step="0.01"
                     value={formData.amount}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 bg-neutral-950 border border-neutral-800 rounded-xl text-white text-lg focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all placeholder:text-neutral-600 font-semibold"
+                    className="w-full pl-10 pr-4 py-3 bg-neutral-950 border border-neutral-800 rounded-xl text-white text-lg focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all placeholder:text-neutral-600 font-semibold"
                     placeholder="0.00"
                   />
                 </div>
@@ -159,7 +159,7 @@ function NewTransactionContent() {
 
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-1.5 flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4 text-violet-400" />
+                  <CalendarDays className="w-4 h-4 text-red-400" />
                   Fecha *
                 </label>
                 <input
@@ -168,7 +168,7 @@ function NewTransactionContent() {
                   required
                   value={formData.transaction_date}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all [color-scheme:dark]"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all [color-scheme:dark]"
                 />
               </div>
             </div>
@@ -176,7 +176,7 @@ function NewTransactionContent() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-1.5 flex items-center gap-2">
-                  <Landmark className="w-4 h-4 text-violet-400" />
+                  <Landmark className="w-4 h-4 text-red-400" />
                   Cuenta Origen/Destino *
                 </label>
                 <select
@@ -184,7 +184,7 @@ function NewTransactionContent() {
                   required
                   value={formData.account_id}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+                  className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
                 >
                   <option value="" disabled>Seleccioná una cuenta...</option>
                   {accounts.map(acc => (
@@ -197,14 +197,14 @@ function NewTransactionContent() {
 
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-1.5 flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-violet-400" />
+                  <Tag className="w-4 h-4 text-red-400" />
                   Categoría
                 </label>
                 <select
                   name="category_id"
                   value={formData.category_id}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
                 >
                   <option value="">Sin categoría...</option>
                   {categories.map(cat => (
@@ -217,7 +217,7 @@ function NewTransactionContent() {
 
           <div>
             <label className="block text-sm font-medium text-neutral-300 mb-1.5 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-violet-400" />
+              <FileText className="w-4 h-4 text-red-400" />
               Descripción (Opcional)
             </label>
             <textarea
@@ -225,7 +225,7 @@ function NewTransactionContent() {
               value={formData.description}
               onChange={handleChange}
               rows={2}
-              className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all resize-none"
+              className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all resize-none"
               placeholder="Aclaración, número de comprobante, etc."
             />
           </div>
@@ -242,7 +242,7 @@ function NewTransactionContent() {
           <button
             type="submit"
             disabled={isLoading || !formData.account_id}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

@@ -117,7 +117,7 @@ function NewProductContent() {
           {/* Información Principal */}
           <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 space-y-5">
             <div className="flex items-center gap-2 border-b border-neutral-800 pb-4 mb-4">
-              <Package className="w-5 h-5 text-violet-400" />
+              <Package className="w-5 h-5 text-red-400" />
               <h2 className="text-lg font-semibold text-white">Información Principal</h2>
             </div>
 
@@ -132,7 +132,7 @@ function NewProductContent() {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
                   placeholder="Ej: Vino Tinto Malbec Reserva"
                 />
               </div>
@@ -147,7 +147,7 @@ function NewProductContent() {
                     name="sku"
                     value={formData.sku}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all font-mono text-sm"
+                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all font-mono text-sm"
                     placeholder="MAL-001"
                   />
                 </div>
@@ -160,7 +160,7 @@ function NewProductContent() {
                     name="barcode"
                     value={formData.barcode}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all font-mono text-sm"
+                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all font-mono text-sm"
                     placeholder="7791234567890"
                   />
                 </div>
@@ -175,7 +175,7 @@ function NewProductContent() {
                     name="category_id"
                     value={formData.category_id}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
                   >
                     <option value="">Sin categoría</option>
                     {categories.map((cat) => (
@@ -193,7 +193,7 @@ function NewProductContent() {
                     name="unit"
                     value={formData.unit}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+                    className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
                   >
                     <option value="unidades">Unidades (Botellas)</option>
                     <option value="cajas">Cajas</option>
@@ -227,7 +227,7 @@ function NewProductContent() {
                       step="0.01"
                       value={formData.cost_price}
                       onChange={handleChange}
-                      className="w-full pl-8 pr-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+                      className="w-full pl-8 pr-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
                       placeholder="0.00"
                     />
                   </div>
@@ -263,7 +263,7 @@ function NewProductContent() {
                   min="0"
                   value={formData.min_stock}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
                 />
               </div>
             </div>
@@ -321,7 +321,7 @@ function NewProductContent() {
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

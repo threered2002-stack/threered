@@ -122,18 +122,18 @@ export default function NewOrganizationPage() {
                   onClick={() => setSelectedTemplate(tpl.id)}
                   className={`flex flex-col items-center justify-center gap-2 p-5 rounded-xl border-2 transition-all ${
                     isSelected
-                      ? 'border-violet-500 bg-violet-500/10'
+                      ? 'border-red-500 bg-red-500/10'
                       : 'border-neutral-700 bg-neutral-800/30 hover:border-neutral-600'
                   }`}
                 >
                   <Icon
                     className={`w-8 h-8 ${
-                      isSelected ? 'text-violet-400' : 'text-neutral-500'
+                      isSelected ? 'text-red-400' : 'text-neutral-500'
                     }`}
                   />
                   <span
                     className={`text-sm font-medium ${
-                      isSelected ? 'text-violet-300' : 'text-neutral-400'
+                      isSelected ? 'text-red-300' : 'text-neutral-400'
                     }`}
                   >
                     {tpl.name}
@@ -167,7 +167,7 @@ export default function NewOrganizationPage() {
             onChange={(e) => setName(e.target.value)}
             placeholder="Ej: Vinoteca Don Julio"
             required
-            className="w-full px-3.5 py-2.5 bg-neutral-800/50 border border-neutral-700 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+            className="w-full px-3.5 py-2.5 bg-neutral-800/50 border border-neutral-700 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
           />
         </div>
 
@@ -185,7 +185,7 @@ export default function NewOrganizationPage() {
             onChange={(e) => setSlug(e.target.value)}
             placeholder="vinoteca-don-julio"
             required
-            className="w-full px-3.5 py-2.5 bg-neutral-800/50 border border-neutral-700 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all font-mono text-sm"
+            className="w-full px-3.5 py-2.5 bg-neutral-800/50 border border-neutral-700 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all font-mono text-sm"
           />
           <p className="mt-1 text-xs text-neutral-500">
             Solo letras minúsculas, números y guiones
@@ -202,7 +202,7 @@ export default function NewOrganizationPage() {
               {(selectedTpl.default_modules as string[]).map((mod) => (
                 <span
                   key={mod}
-                  className="text-xs px-2.5 py-1 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20"
+                  className="text-xs px-2.5 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20"
                 >
                   {mod}
                 </span>
@@ -214,7 +214,7 @@ export default function NewOrganizationPage() {
         <button
           type="submit"
           disabled={isLoading || !selectedTemplate}
-          className="w-full py-2.5 px-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+          className="w-full py-2.5 px-4 bg-gradient-to-r from-red-600 to-red-600 hover:from-red-500 hover:to-red-500 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
         >
           {isLoading ? (
             <span className="inline-flex items-center gap-2">

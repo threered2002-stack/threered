@@ -92,7 +92,7 @@ export function PurchaseOrderForm({ suppliers, warehouses, products }: { supplie
         <div className="bg-neutral-900/40 border border-neutral-800/80 rounded-2xl overflow-hidden">
           <div className="p-6 border-b border-neutral-800/80">
             <h2 className="text-lg font-medium text-white flex items-center gap-2 mb-4">
-              <Building2 className="w-5 h-5 text-violet-400" />
+              <Building2 className="w-5 h-5 text-red-400" />
               Datos del Proveedor
             </h2>
             
@@ -103,7 +103,7 @@ export function PurchaseOrderForm({ suppliers, warehouses, products }: { supplie
                   required
                   value={supplierId}
                   onChange={e => setSupplierId(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white appearance-none focus:ring-2 focus:ring-violet-500/40 transition-all"
+                  className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white appearance-none focus:ring-2 focus:ring-red-500/40 transition-all"
                 >
                   <option value="">Seleccionar proveedor...</option>
                   {suppliers.map(s => (
@@ -118,7 +118,7 @@ export function PurchaseOrderForm({ suppliers, warehouses, products }: { supplie
                   required
                   value={warehouseId}
                   onChange={e => setWarehouseId(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white appearance-none focus:ring-2 focus:ring-violet-500/40 transition-all"
+                  className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white appearance-none focus:ring-2 focus:ring-red-500/40 transition-all"
                 >
                   {warehouses.map(w => (
                     <option key={w.id} value={w.id}>{w.name}</option>
@@ -132,7 +132,7 @@ export function PurchaseOrderForm({ suppliers, warehouses, products }: { supplie
                   type="date"
                   value={expectedDate}
                   onChange={e => setExpectedDate(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 transition-all"
+                  className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 transition-all"
                 />
               </div>
             </div>
@@ -140,7 +140,7 @@ export function PurchaseOrderForm({ suppliers, warehouses, products }: { supplie
 
           <div className="p-6">
             <h2 className="text-lg font-medium text-white flex items-center gap-2 mb-4">
-              <Package className="w-5 h-5 text-violet-400" />
+              <Package className="w-5 h-5 text-red-400" />
               Ítems Solicitados
             </h2>
             
@@ -154,7 +154,7 @@ export function PurchaseOrderForm({ suppliers, warehouses, products }: { supplie
                         required
                         value={item.productId}
                         onChange={e => updateItem(index, 'productId', e.target.value)}
-                        className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:ring-1 focus:ring-violet-500 transition-all"
+                        className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:ring-1 focus:ring-red-500 transition-all"
                       >
                         <option value="">Seleccionar producto...</option>
                         {products.map(p => (
@@ -170,7 +170,7 @@ export function PurchaseOrderForm({ suppliers, warehouses, products }: { supplie
                         min="1"
                         value={item.quantity}
                         onChange={e => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                        className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:ring-1 focus:ring-violet-500 transition-all"
+                        className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:ring-1 focus:ring-red-500 transition-all"
                       />
                     </div>
                     <div className="w-full sm:w-32">
@@ -182,7 +182,7 @@ export function PurchaseOrderForm({ suppliers, warehouses, products }: { supplie
                         step="0.01"
                         value={item.costCents / 100}
                         onChange={e => updateItem(index, 'costCents', Math.round(parseFloat(e.target.value) * 100) || 0)}
-                        className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:ring-1 focus:ring-violet-500 transition-all"
+                        className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:ring-1 focus:ring-red-500 transition-all"
                       />
                     </div>
                     <button 
@@ -199,9 +199,9 @@ export function PurchaseOrderForm({ suppliers, warehouses, products }: { supplie
 
             <div 
               onClick={addItem}
-              className="border-2 border-dashed border-neutral-800 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:border-violet-500/50 hover:bg-violet-500/5 transition-all cursor-pointer"
+              className="border-2 border-dashed border-neutral-800 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:border-red-500/50 hover:bg-red-500/5 transition-all cursor-pointer"
             >
-              <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center mb-3 group-hover:bg-violet-500/20 group-hover:text-violet-400">
+              <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center mb-3 group-hover:bg-red-500/20 group-hover:text-red-400">
                 <Plus className="w-6 h-6 text-neutral-400" />
               </div>
               <p className="font-medium text-white">Agregar Producto</p>
@@ -220,7 +220,7 @@ export function PurchaseOrderForm({ suppliers, warehouses, products }: { supplie
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-violet-600 hover:bg-violet-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-violet-500/20"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-red-500/20"
           >
             {isSubmitting ? 'Guardando...' : (
               <>

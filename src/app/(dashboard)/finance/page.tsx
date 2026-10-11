@@ -63,7 +63,7 @@ export default async function FinancePage() {
           </div>
           <Link
             href="/finance/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20 w-fit"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-red-500/20 w-fit"
           >
             <Plus className="w-5 h-5" />
             Nuevo Movimiento
@@ -104,14 +104,14 @@ export default async function FinancePage() {
           {/* Cuentas */}
           <div className="lg:col-span-1 space-y-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Landmark className="w-5 h-5 text-violet-400" />
+              <Landmark className="w-5 h-5 text-red-400" />
               Mis Cuentas
             </h2>
             <div className="space-y-3">
               {accounts.map((acc) => (
                 <div key={acc.id} className="p-4 bg-neutral-900/40 border border-neutral-800/80 rounded-xl hover:bg-neutral-900/60 transition-colors flex items-center justify-between group">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 group-hover:text-violet-400 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 group-hover:text-red-400 transition-colors">
                       {getAccountIcon(acc.account_type)}
                     </div>
                     <div>
@@ -133,7 +133,7 @@ export default async function FinancePage() {
           {/* Gráfico de Distribución */}
           <div className="lg:col-span-1 space-y-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <PieChart className="w-5 h-5 text-violet-400" />
+              <PieChart className="w-5 h-5 text-red-400" />
               Distribución del Mes
             </h2>
             <div className="p-6 bg-neutral-900/40 border border-neutral-800/80 rounded-xl flex flex-col items-center justify-center">
@@ -156,7 +156,7 @@ export default async function FinancePage() {
           {/* Últimos Movimientos */}
           <div className="lg:col-span-2 space-y-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Activity className="w-5 h-5 text-violet-400" />
+              <Activity className="w-5 h-5 text-red-400" />
               Últimos Movimientos
             </h2>
             <div className="bg-neutral-900/40 border border-neutral-800/80 rounded-2xl overflow-hidden">

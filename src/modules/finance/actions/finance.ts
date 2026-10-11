@@ -170,7 +170,7 @@ export async function getAccountsReceivable(orgId: string) {
     .from('accounts_receivable')
     .select(`
       *,
-      customer:customers(name)
+      customer:customers(first_name, last_name)
     `)
     .eq('organization_id', orgId)
     .order('due_date', { ascending: true })

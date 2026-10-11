@@ -113,7 +113,7 @@ export function ManualDebtForm({ customers, suppliers }: { customers: any[], sup
                 required
                 value={entityId}
                 onChange={e => setEntityId(e.target.value)}
-                className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white appearance-none focus:ring-2 focus:ring-violet-500/40 transition-all"
+                className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white appearance-none focus:ring-2 focus:ring-red-500/40 transition-all"
               >
                 <option value="">Seleccionar {type === 'receivable' ? 'cliente' : 'proveedor'}...</option>
                 {type === 'receivable' 
@@ -133,7 +133,7 @@ export function ManualDebtForm({ customers, suppliers }: { customers: any[], sup
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 transition-all"
+                className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 transition-all"
               />
             </div>
 
@@ -144,7 +144,7 @@ export function ManualDebtForm({ customers, suppliers }: { customers: any[], sup
                 required
                 value={dueDate}
                 onChange={e => setDueDate(e.target.value)}
-                className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 transition-all"
+                className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 transition-all"
               />
             </div>
 
@@ -155,7 +155,7 @@ export function ManualDebtForm({ customers, suppliers }: { customers: any[], sup
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
                 placeholder="Ej: Saldo inicial, Compra pendiente de carga..."
-                className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 transition-all"
+                className="w-full px-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 transition-all"
               />
             </div>
           </div>

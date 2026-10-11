@@ -27,12 +27,12 @@ export default async function SuppliersPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Building2 className="w-6 h-6 text-violet-400" />
+              <Building2 className="w-6 h-6 text-red-400" />
               Proveedores
             </h1>
             <p className="text-neutral-400 mt-1">Directorio de empresas que abastecen tu inventario.</p>
           </div>
-          <button className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20 w-fit">
+          <button className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-red-500/20 w-fit">
             <Plus className="w-4 h-4" />
             Nuevo Proveedor
           </button>
@@ -44,7 +44,7 @@ export default async function SuppliersPage() {
             <input
               type="text"
               placeholder="Buscar proveedor por nombre, CUIT o contacto..."
-              className="w-full pl-9 pr-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all placeholder:text-neutral-600"
+              className="w-full pl-9 pr-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all placeholder:text-neutral-600"
             />
           </div>
         </div>
@@ -54,7 +54,7 @@ export default async function SuppliersPage() {
             <div key={supplier.id} className="bg-neutral-900/40 border border-neutral-800/80 rounded-2xl p-5 hover:bg-neutral-900/80 transition-colors group cursor-pointer">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-neutral-800 flex items-center justify-center text-neutral-400 font-bold group-hover:bg-violet-500/20 group-hover:text-violet-400 transition-colors">
+                  <div className="w-12 h-12 rounded-xl bg-neutral-800 flex items-center justify-center text-neutral-400 font-bold group-hover:bg-red-500/20 group-hover:text-red-400 transition-colors">
                     {supplier.trade_name ? supplier.trade_name.charAt(0) : supplier.name.charAt(0)}
                   </div>
                   <div>

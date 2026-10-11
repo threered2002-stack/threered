@@ -38,14 +38,14 @@ export default async function CustomersPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Users className="w-6 h-6 text-violet-400" />
+              <Users className="w-6 h-6 text-red-400" />
               Clientes
             </h1>
             <p className="text-neutral-400 mt-1">Directorio y ficha de clientes.</p>
           </div>
           <Link
             href="/customers/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20 w-fit"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-red-500/20 w-fit"
           >
             <Plus className="w-4 h-4" />
             Nuevo Cliente
@@ -59,7 +59,7 @@ export default async function CustomersPage() {
             <input
               type="text"
               placeholder="Buscar por nombre, email o DNI..."
-              className="w-full pl-9 pr-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all placeholder:text-neutral-600"
+              className="w-full pl-9 pr-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all placeholder:text-neutral-600"
             />
           </div>
           <button className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-neutral-900/50 hover:bg-neutral-800 text-neutral-300 font-medium rounded-xl border border-neutral-800 transition-colors">

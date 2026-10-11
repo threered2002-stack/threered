@@ -42,7 +42,7 @@ export default async function StockMovementsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <ArrowLeftRight className="w-6 h-6 text-violet-400" />
+              <ArrowLeftRight className="w-6 h-6 text-red-400" />
               Movimientos de Stock
             </h1>
             <p className="text-neutral-400 mt-1">Historial de entradas, salidas y transferencias.</p>
@@ -62,7 +62,7 @@ export default async function StockMovementsPage() {
             <input
               type="text"
               placeholder="Buscar por producto, SKU o depósito..."
-              className="w-full pl-9 pr-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all placeholder:text-neutral-600"
+              className="w-full pl-9 pr-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all placeholder:text-neutral-600"
             />
           </div>
           <button className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-neutral-900/50 hover:bg-neutral-800 text-neutral-300 font-medium rounded-xl border border-neutral-800 transition-colors">

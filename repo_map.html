@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mapa de sistema de gestion PADRE</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;background:#0f1319;color:#d8dee9;display:flex;height:100vh;overflow:hidden}
+#main{flex:1;display:flex;flex-direction:column;min-width:0}
+header{display:flex;gap:8px;align-items:center;padding:8px 12px;background:#171c24;border-bottom:1px solid #262d38;flex-wrap:wrap}
+.brand{font-size:15px;margin-right:auto}
+button{background:#232b37;color:#d8dee9;border:1px solid #2f3846;border-radius:8px;padding:7px 12px;font:inherit;cursor:pointer}
+button:hover{background:#2c3646}button.primary{background:#2f6fdd;border-color:#2f6fdd;color:#fff}button.primary:hover{background:#3d7ff0}
+button:disabled{opacity:.4;cursor:default}
+#stage{flex:1;position:relative;min-height:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;display:block}
+#tip{position:absolute;pointer-events:none;background:#000c;border:1px solid #333c4a;border-radius:8px;padding:6px 10px;font-size:13px;display:none;max-width:280px;z-index:5}
+#tip small{display:block;color:#9aa5b5}
+.overlay{position:absolute;background:#171c24f2;border:1px solid #2f3846;border-radius:12px;padding:14px 16px;box-shadow:0 8px 30px #0008;z-index:6}
+#intro{left:16px;top:16px;max-width:420px}
+#intro h3,#tour h3{margin:0 0 6px;font-size:16px}
+#intro p{margin:6px 0}
+#tour{left:16px;bottom:16px;max-width:460px;display:none}
+#tour .tn{color:#8b95a5;font-size:12px;margin-bottom:2px}
+#tour .tb{display:flex;gap:8px;margin-top:10px}
+aside{width:370px;background:#171c24;border-left:1px solid #262d38;padding:12px;overflow-y:auto}
+input[type=text]{width:100%;padding:9px;border-radius:8px;border:1px solid #2f3846;background:#0f1319;color:#d8dee9;font:inherit}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#8b95a5;margin:16px 0 6px}
+.hint{color:#8b95a5;font-size:12.5px;margin:2px 0 6px}
+.item{padding:5px 8px;border-radius:6px;cursor:pointer;word-break:break-word}.item:hover{background:#232b37}
+.badge{float:right;font-size:11px;background:#232b37;border-radius:10px;padding:1px 8px;color:#9aa5b5}
+.muted{color:#8b95a5}
+.cards{display:flex;gap:8px;margin-top:10px}.cards div{flex:1;background:#232b37;border-radius:10px;padding:8px;text-align:center;font-size:12px;color:#9aa5b5}.cards b{display:block;font-size:22px;color:#fff}
+.card h3{margin:0 0 2px;font-size:17px}.big{font-size:30px;line-height:1}
+.risk{border-radius:8px;padding:8px 10px;margin:10px 0;font-size:13px}
+.risk.ok{background:#17301f;border:1px solid #2c5a3b}.risk.mid{background:#33290f;border:1px solid #6b5518}.risk.high{background:#361a1a;border:1px solid #7a2e2e}
+.note{background:#232b37;border-radius:8px;padding:8px 10px;margin:8px 0;font-size:13px}
+.o{color:#f1a14e}.i{color:#4ed3d3}
+.tag{display:inline-block;background:#232b37;border-radius:4px;padding:1px 7px;margin:2px 3px 0 0;font-size:12px}
+.leg{display:flex;align-items:center;gap:7px;padding:3px 4px;border-radius:6px}.leg:hover{background:#232b37}
+.leg span.t{flex:1;cursor:pointer}.dot{width:11px;height:11px;border-radius:50%;flex:none}
+.chk{display:flex;gap:6px;align-items:center;margin-top:12px;cursor:pointer}
+details{margin-top:10px}summary{cursor:pointer;color:#9aa5b5}
+.gloss p{margin:6px 0;font-size:13px}
+code{background:#232b37;padding:1px 5px;border-radius:4px;word-break:break-all}
+</style></head><body>
+<div id="main">
+<header>
+ <div class="brand">🗺️ <b>Mapa de sistema de gestion PADRE</b></div>
+ <button id="bTour" class="primary">▶ Tour guiado</button>
+ <button id="bOpen">Abrir todas las zonas</button>
+ <button id="bClose">Cerrar todas</button>
+ <button id="bShake">🔀 Reordenar</button>
+ <button id="bHelp">❓ Ayuda</button>
+</header>
+<div id="stage">
+ <canvas id="c"></canvas>
+ <div id="tip"></div>
+ <div id="intro" class="overlay">
+  <h3>👋 Cómo leer este mapa</h3>
+  <p>🫧 Las <b>burbujas grandes</b> son <b>zonas</b> del sistema (por ejemplo Ventas o Stock). Cada una agrupa varias <b>piezas</b> (archivos).</p>
+  <p>➡️ Una flecha de <b>A hacia B</b> significa: <b>A necesita a B</b> para funcionar. Los puntitos animados muestran ese camino.</p>
+  <p>👆 <b>Un clic</b> en algo te explica qué es. <b>Doble clic</b> en una zona la abre y muestra sus piezas por dentro.</p>
+  <div class="tb" style="display:flex;gap:8px;margin-top:10px"><button class="primary" id="iTour">▶ Empezar tour guiado</button><button id="iClose">Entendido</button></div>
+ </div>
+ <div id="tour" class="overlay"><div class="tn"></div><h3></h3><div class="tx"></div>
+  <div class="tb"><button id="tPrev">◀ Anterior</button><button id="tNext" class="primary">Siguiente ▶</button><button id="tEnd">Salir</button></div></div>
+</div>
+</div>
+<aside>
+ <input type="text" id="q" placeholder="🔎 Buscar una pieza o zona (ej: ventas, login)">
+ <div id="qn" class="hint"></div>
+ <div id="info"></div>
+ <h2>🎨 Zonas del sistema</h2><div class="hint">Clic en el nombre para verla. La casilla la muestra u oculta.</div>
+ <div id="legend"></div>
+ <label class="chk"><input type="checkbox" id="lab"> Mostrar todos los nombres</label>
+ <details class="gloss"><summary>📖 Palabras que vas a ver</summary>
+  <p><b>Pieza</b>: un archivo del proyecto (una pantalla, un botón, un cálculo...).</p>
+  <p><b>Zona</b>: un grupo de piezas que trabajan sobre lo mismo (Ventas, Stock, Finanzas...).</p>
+  <p><b>Necesita / usa</b>: una pieza no funciona sola; le pide ayuda a otra.</p>
+  <p><b>API</b>: una puerta de entrada para que otras partes (la app, el bot, MercadoPago) hablen con el servidor.</p>
+  <p><b>Librería externa</b>: un programa hecho por terceros que el proyecto instala y aprovecha.</p>
+  <p><b>Impacto</b>: cuántas piezas podrían dejar de funcionar si esta se rompe o se modifica mal.</p>
+ </details>
+</aside>
+<script>
+const D={"name": "sistema de gestion PADRE", "nodes": [{"p": "eslint.config.mjs", "g": "(raíz)", "z": "Archivos generales", "l": 19, "e": ["eslint", "eslint-config-next"], "t": "config", "n": "Eslint config", "d": ""}, {"p": "next-env.d.ts", "g": "(raíz)", "z": "Archivos generales", "l": 8, "e": [], "t": "script", "n": "Next env d", "d": "/ <reference types=\"next\" /> / <reference types=\"next/image-types/global\" />"}, {"p": "next.config.ts", "g": "(raíz)", "z": "Archivos generales", "l": 8, "e": ["next"], "t": "config", "n": "Next config", "d": ""}, {"p": "postcss.config.mjs", "g": "(raíz)", "z": "Archivos generales", "l": 8, "e": [], "t": "config", "n": "Postcss config", "d": ""}, {"p": "src/app/(auth)/layout.tsx", "g": "app", "z": "Estructura general", "l": 32, "e": [], "t": "marco", "n": "Inicio (estructura)", "d": ""}, {"p": "src/app/(auth)/login/page.tsx", "g": "login", "z": "Ingreso (login)", "l": 106, "e": ["next", "react"], "t": "pantalla", "n": "Login", "d": ""}, {"p": "src/app/(auth)/register/page.tsx", "g": "register", "z": "Registro de usuarios", "l": 127, "e": ["next", "react"], "t": "pantalla", "n": "Register", "d": ""}, {"p": "src/app/(dashboard)/customers/[id]/edit/page.tsx", "g": "customers", "z": "Clientes", "l": 291, "e": ["lucide-react", "next", "react"], "t": "pantalla", "n": "Customers › detalle › Edit", "d": ""}, {"p": "src/app/(dashboard)/customers/customer-row.tsx", "g": "customers", "z": "Clientes", "l": 139, "e": ["lucide-react", "next", "react"], "t": "pieza", "n": "Customer row", "d": ""}, {"p": "src/app/(dashboard)/customers/new/page.tsx", "g": "customers", "z": "Clientes", "l": 259, "e": ["lucide-react", "next", "react"], "t": "pantalla", "n": "Customers › New", "d": ""}, {"p": "src/app/(dashboard)/customers/page.tsx", "g": "customers", "z": "Clientes", "l": 106, "e": ["lucide-react", "next"], "t": "pantalla", "n": "Customers", "d": ""}, {"p": "src/app/(dashboard)/finance/accounts/page.tsx", "g": "finance", "z": "Finanzas", "l": 119, "e": ["lucide-react", "next"], "t": "pantalla", "n": "Finance › Accounts", "d": ""}, {"p": "src/app/(dashboard)/finance/new/page.tsx", "g": "finance", "z": "Finanzas", "l": 259, "e": ["lucide-react", "next", "react"], "t": "pantalla", "n": "Finance › New", "d": ""}, {"p": "src/app/(dashboard)/finance/page.tsx", "g": "finance", "z": "Finanzas", "l": 218, "e": ["lucide-react", "next"], "t": "pantalla", "n": "Finance", "d": ""}, {"p": "src/app/(dashboard)/finance/payables-receivables/new/form.tsx", "g": "finance", "z": "Finanzas", "l": 190, "e": ["lucide-react", "next", "react"], "t": "pieza", "n": "Form", "d": ""}, {"p": "src/app/(dashboard)/finance/payables-receivables/new/page.tsx", "g": "finance", "z": "Finanzas", "l": 35, "e": ["next"], "t": "pantalla", "n": "Finance › Payables receivables › New", "d": ""}, {"p": "src/app/(dashboard)/finance/payables-receivables/page.tsx", "g": "finance", "z": "Finanzas", "l": 201, "e": ["lucide-react", "next"], "t": "pantalla", "n": "Finance › Payables receivables", "d": ""}, {"p": "src/app/(dashboard)/finance/transactions/page.tsx", "g": "finance", "z": "Finanzas", "l": 137, "e": ["lucide-react", "next"], "t": "pantalla", "n": "Finance › Transactions", "d": ""}, {"p": "src/app/(dashboard)/layout.tsx", "g": "app", "z": "Estructura general", "l": 19, "e": [], "t": "marco", "n": "Inicio (estructura)", "d": ""}, {"p": "src/app/(dashboard)/loading.tsx", "g": "app", "z": "Estructura general", "l": 21, "e": ["lucide-react"], "t": "marco", "n": "Inicio (cargando)", "d": ""}, {"p": "src/app/(dashboard)/org/new/page.tsx", "g": "org", "z": "Organización", "l": 235, "e": ["lucide-react", "next", "react"], "t": "pantalla", "n": "Org › New", "d": ""}, {"p": "src/app/(dashboard)/page.tsx", "g": "app", "z": "Estructura general", "l": 176, "e": ["lucide-react", "next", "react"], "t": "pantalla", "n": "Inicio", "d": ""}, {"p": "src/app/(dashboard)/purchases/new/form.tsx", "g": "purchases", "z": "Compras", "l": 237, "e": ["lucide-react", "next", "react"], "t": "pieza", "n": "Form", "d": ""}, {"p": "src/app/(dashboard)/purchases/new/page.tsx", "g": "purchases", "z": "Compras", "l": 57, "e": ["lucide-react", "react"], "t": "pantalla", "n": "Purchases › New", "d": ""}, {"p": "src/app/(dashboard)/purchases/page.tsx", "g": "purchases", "z": "Compras", "l": 145, "e": ["lucide-react", "next"], "t": "pantalla", "n": "Purchases", "d": ""}, {"p": "src/app/(dashboard)/purchases/suppliers/page.tsx", "g": "purchases", "z": "Compras", "l": 116, "e": ["lucide-react", "next"], "t": "pantalla", "n": "Purchases › Suppliers", "d": ""}, {"p": "src/app/(dashboard)/reports/page.tsx", "g": "reports", "z": "Reportes", "l": 263, "e": ["lucide-react", "react"], "t": "pantalla", "n": "Reports", "d": ""}, {"p": "src/app/(dashboard)/sales/cash/page.tsx", "g": "sales", "z": "Ventas", "l": 148, "e": ["lucide-react", "next"], "t": "pantalla", "n": "Sales › Cash", "d": ""}, {"p": "src/app/(dashboard)/sales/page.tsx", "g": "sales", "z": "Ventas", "l": 142, "e": ["lucide-react", "next"], "t": "pantalla", "n": "Sales", "d": ""}, {"p": "src/app/(dashboard)/sales/pos/page.tsx", "g": "sales", "z": "Ventas", "l": 44, "e": ["next"], "t": "pantalla", "n": "Sales › Pos", "d": ""}, {"p": "src/app/(dashboard)/sales/pos/pos-client.tsx", "g": "sales", "z": "Ventas", "l": 334, "e": ["lucide-react", "next", "react"], "t": "pieza", "n": "Pos client", "d": ""}, {"p": "src/app/(dashboard)/settings/page.tsx", "g": "settings", "z": "Ajustes", "l": 365, "e": ["lucide-react", "react"], "t": "pantalla", "n": "Settings", "d": ""}, {"p": "src/app/(dashboard)/stock/adjust-stock-modal.tsx", "g": "stock", "z": "Stock", "l": 173, "e": ["lucide-react", "react"], "t": "pieza", "n": "Adjust stock modal", "d": ""}, {"p": "src/app/(dashboard)/stock/alerts/page.tsx", "g": "stock", "z": "Stock", "l": 118, "e": ["lucide-react", "next"], "t": "pantalla", "n": "Stock › Alerts", "d": ""}, {"p": "src/app/(dashboard)/stock/bulk-actions-modal.tsx", "g": "stock", "z": "Stock", "l": 272, "e": ["lucide-react", "react"], "t": "pieza", "n": "Bulk actions modal", "d": ""}, {"p": "src/app/(dashboard)/stock/edit-product-modal.tsx", "g": "stock", "z": "Stock", "l": 336, "e": ["lucide-react", "react"], "t": "pieza", "n": "Edit product modal", "d": ""}, {"p": "src/app/(dashboard)/stock/movements/page.tsx", "g": "stock", "z": "Stock", "l": 140, "e": ["lucide-react", "next"], "t": "pantalla", "n": "Stock › Movements", "d": ""}, {"p": "src/app/(dashboard)/stock/new/page.tsx", "g": "stock", "z": "Stock", "l": 338, "e": ["lucide-react", "next", "react"], "t": "pantalla", "n": "Stock › New", "d": ""}, {"p": "src/app/(dashboard)/stock/page.tsx", "g": "stock", "z": "Stock", "l": 410, "e": ["lucide-react", "next", "react"], "t": "pantalla", "n": "Stock", "d": ""}, {"p": "src/app/(dashboard)/stock/warehouses/page.tsx", "g": "stock", "z": "Stock", "l": 30, "e": ["next"], "t": "pantalla", "n": "Stock › Warehouses", "d": ""}, {"p": "src/app/(dashboard)/stock/warehouses/warehouse-modal.tsx", "g": "stock", "z": "Stock", "l": 206, "e": ["lucide-react", "next", "react"], "t": "pieza", "n": "Warehouse modal", "d": ""}, {"p": "src/app/(dashboard)/stock/warehouses/warehouses-client.tsx", "g": "stock", "z": "Stock", "l": 122, "e": ["lucide-react", "react"], "t": "pieza", "n": "Warehouses client", "d": ""}, {"p": "src/app/api/seed/route.ts", "g": "api", "z": "Puertas de entrada (API)", "l": 79, "e": ["next"], "t": "api", "n": "Seed (API)", "d": ""}, {"p": "src/app/auth/callback/route.ts", "g": "auth", "z": "Ingreso y usuarios", "l": 20, "e": ["next"], "t": "api", "n": "Auth › Callback (API)", "d": ""}, {"p": "src/app/layout.tsx", "g": "app", "z": "Estructura general", "l": 38, "e": ["next"], "t": "marco", "n": "Inicio (estructura)", "d": ""}, {"p": "src/components/finance/finance-charts.tsx", "g": "finance", "z": "Finanzas", "l": 51, "e": ["recharts"], "t": "pieza", "n": "Finance charts", "d": ""}, {"p": "src/components/layout/module-guard.tsx", "g": "layout", "z": "Layout", "l": 60, "e": ["next", "react"], "t": "pieza", "n": "Module guard", "d": ""}, {"p": "src/components/layout/sidebar.tsx", "g": "layout", "z": "Layout", "l": 261, "e": ["lucide-react", "next", "react"], "t": "pieza", "n": "Sidebar", "d": ""}, {"p": "src/components/reports/report-charts.tsx", "g": "reports", "z": "Reportes", "l": 109, "e": ["recharts"], "t": "pieza", "n": "Report charts", "d": ""}, {"p": "src/components/ui/button.tsx", "g": "ui", "z": "Elementos visuales comunes", "l": 58, "e": ["@base-ui/react", "class-variance-authority", "cn"], "t": "pieza", "n": "Button", "d": ""}, {"p": "src/lib/constants/index.ts", "g": "constants", "z": "Constants", "l": 133, "e": [], "t": "herramienta", "n": "Constants (principal)", "d": "============================================================================ Constantes del sistema ============================================================"}, {"p": "src/lib/supabase/client.ts", "g": "supabase", "z": "Base de datos", "l": 9, "e": ["@supabase/ssr"], "t": "datos", "n": "Client", "d": ""}, {"p": "src/lib/supabase/middleware.ts", "g": "supabase", "z": "Base de datos", "l": 60, "e": ["@supabase/ssr", "next"], "t": "datos", "n": "Middleware", "d": ""}, {"p": "src/lib/supabase/server.ts", "g": "supabase", "z": "Base de datos", "l": 29, "e": ["@supabase/ssr", "next"], "t": "datos", "n": "Server", "d": ""}, {"p": "src/lib/types/index.ts", "g": "types", "z": "Types", "l": 537, "e": [], "t": "datos", "n": "Types (principal)", "d": "============================================================================ Tipos del Sistema PADRE ==========================================================="}, {"p": "src/lib/utils.ts", "g": "lib", "z": "Herramientas comunes", "l": 2, "e": ["cn"], "t": "herramienta", "n": "Utils", "d": ""}, {"p": "src/lib/utils/cn.ts", "g": "utils", "z": "Herramientas comunes", "l": 11, "e": ["clsx", "tailwind-merge"], "t": "herramienta", "n": "Cn", "d": ""}, {"p": "src/lib/utils/format.ts", "g": "utils", "z": "Herramientas comunes", "l": 69, "e": ["date-fns"], "t": "herramienta", "n": "Format", "d": ""}, {"p": "src/lib/utils/money.ts", "g": "utils", "z": "Herramientas comunes", "l": 95, "e": [], "t": "herramienta", "n": "Money", "d": "============================================================================ Utilidades de dinero: centavos ↔ display =========================================="}, {"p": "src/lib/utils/permissions.ts", "g": "utils", "z": "Herramientas comunes", "l": 130, "e": [], "t": "herramienta", "n": "Permissions", "d": ""}, {"p": "src/modules/core/actions/auth.ts", "g": "core", "z": "Core", "l": 88, "e": ["next"], "t": "acciones", "n": "Auth", "d": ""}, {"p": "src/modules/core/actions/dashboard.ts", "g": "core", "z": "Core", "l": 48, "e": [], "t": "acciones", "n": "Dashboard", "d": ""}, {"p": "src/modules/core/actions/organizations.ts", "g": "core", "z": "Core", "l": 277, "e": [], "t": "acciones", "n": "Organizations", "d": ""}, {"p": "src/modules/core/actions/settings.ts", "g": "core", "z": "Core", "l": 96, "e": ["next"], "t": "config", "n": "Settings", "d": ""}, {"p": "src/modules/core/schemas/index.ts", "g": "core", "z": "Core", "l": 95, "e": ["zod"], "t": "datos", "n": "Schemas (principal)", "d": ""}, {"p": "src/modules/customers/actions/customers.ts", "g": "customers", "z": "Clientes", "l": 144, "e": ["next"], "t": "acciones", "n": "Customers", "d": ""}, {"p": "src/modules/finance/actions/finance.ts", "g": "finance", "z": "Finanzas", "l": 255, "e": ["next"], "t": "acciones", "n": "Finance", "d": ""}, {"p": "src/modules/purchases/actions/purchases.ts", "g": "purchases", "z": "Compras", "l": 104, "e": ["next"], "t": "acciones", "n": "Purchases", "d": ""}, {"p": "src/modules/reports/actions/reports.ts", "g": "reports", "z": "Reportes", "l": 197, "e": [], "t": "acciones", "n": "Reports", "d": ""}, {"p": "src/modules/sales/actions/sales.ts", "g": "sales", "z": "Ventas", "l": 135, "e": ["next"], "t": "acciones", "n": "Sales", "d": ""}, {"p": "src/modules/stock/actions/products.ts", "g": "stock", "z": "Stock", "l": 162, "e": ["next"], "t": "acciones", "n": "Products", "d": ""}, {"p": "src/modules/stock/actions/stock.ts", "g": "stock", "z": "Stock", "l": 229, "e": ["next"], "t": "acciones", "n": "Stock", "d": ""}, {"p": "src/providers/auth-provider.tsx", "g": "providers", "z": "Providers", "l": 83, "e": ["@supabase/supabase-js", "react"], "t": "pieza", "n": "Auth provider", "d": ""}, {"p": "src/providers/org-provider.tsx", "g": "providers", "z": "Providers", "l": 160, "e": ["react"], "t": "pieza", "n": "Org provider", "d": ""}, {"p": "src/proxy.ts", "g": "(raíz)", "z": "Archivos generales", "l": 20, "e": ["next"], "t": "codigo", "n": "Proxy", "d": ""}], "edges": [[5, 60], [6, 60], [7, 46], [7, 50], [7, 65], [7, 73], [8, 65], [8, 73], [9, 46], [9, 50], [9, 65], [9, 73], [10, 8], [10, 46], [10, 53], [10, 65], [11, 46], [11, 53], [11, 66], [12, 46], [12, 66], [12, 73], [13, 45], [13, 46], [13, 53], [13, 62], [13, 66], [14, 66], [14, 73], [15, 14], [15, 53], [16, 46], [16, 53], [16, 66], [17, 46], [17, 53], [17, 66], [18, 47], [20, 51], [20, 54], [20, 62], [21, 50], [21, 58], [21, 61], [21, 72], [21, 73], [22, 67], [22, 73], [23, 22], [23, 51], [23, 67], [23, 70], [23, 73], [24, 46], [24, 50], [24, 53], [24, 67], [25, 46], [25, 53], [25, 67], [26, 46], [26, 48], [26, 68], [26, 73], [27, 46], [27, 53], [27, 69], [28, 46], [28, 50], [28, 53], [28, 69], [29, 30], [29, 46], [29, 53], [29, 65], [29, 69], [29, 71], [30, 69], [31, 63], [31, 73], [32, 54], [32, 71], [32, 73], [33, 46], [33, 53], [33, 71], [34, 70], [34, 71], [34, 73], [35, 54], [35, 70], [35, 73], [36, 46], [36, 50], [36, 53], [36, 71], [37, 46], [37, 70], [37, 73], [38, 32], [38, 34], [38, 35], [38, 46], [38, 54], [38, 58], [38, 70], [38, 71], [38, 73], [39, 41], [39, 46], [39, 53], [39, 71], [40, 71], [40, 73], [41, 40], [42, 53], [43, 53], [44, 55], [44, 72], [44, 73], [46, 54], [46, 73], [47, 50], [47, 54], [47, 57], [47, 60], [47, 72], [47, 73], [48, 58], [59, 54], [60, 53], [60, 64], [61, 53], [62, 53], [62, 54], [62, 64], [63, 53], [65, 53], [66, 53], [67, 53], [68, 53], [69, 53], [70, 53], [71, 53], [72, 51], [72, 54], [73, 51], [73, 54], [74, 52]], "groups": {"(raíz)": {"label": "Archivos generales", "icon": "📁"}, "app": {"label": "Estructura general", "icon": "🧭"}, "login": {"label": "Ingreso (login)", "icon": "🔐"}, "register": {"label": "Registro de usuarios", "icon": "📝"}, "customers": {"label": "Clientes", "icon": "👥"}, "finance": {"label": "Finanzas", "icon": "💰"}, "org": {"label": "Organización", "icon": "🏢"}, "purchases": {"label": "Compras", "icon": "🧾"}, "reports": {"label": "Reportes", "icon": "📈"}, "sales": {"label": "Ventas", "icon": "🛒"}, "settings": {"label": "Ajustes", "icon": "⚙️"}, "stock": {"label": "Stock", "icon": "📦"}, "api": {"label": "Puertas de entrada (API)", "icon": "🔌"}, "auth": {"label": "Ingreso y usuarios", "icon": "🔐"}, "layout": {"label": "Layout", "icon": "📁"}, "ui": {"label": "Elementos visuales comunes", "icon": "🎨"}, "constants": {"label": "Constants", "icon": "📁"}, "supabase": {"label": "Base de datos", "icon": "🗄️"}, "types": {"label": "Types", "icon": "📁"}, "lib": {"label": "Herramientas comunes", "icon": "🧰"}, "utils": {"label": "Herramientas comunes", "icon": "🧰"}, "core": {"label": "Core", "icon": "📁"}, "providers": {"label": "Providers", "icon": "📁"}}, "types": {"pantalla": {"icon": "🖥️", "label": "Pantalla", "desc": "Una pantalla completa que ve la persona que usa el sistema."}, "marco": {"icon": "🧱", "label": "Estructura de pantalla", "desc": "Un marco que envuelve a varias pantallas: menús, cabecera, mensajes de carga o de error."}, "pieza": {"icon": "🧩", "label": "Pieza visual", "desc": "Un bloque visual que se reutiliza en varias pantallas: un botón, una tabla, un formulario, una ventana emergente."}, "acciones": {"icon": "⚙️", "label": "Acciones del sistema", "desc": "Lo que sucede cuando alguien toca un botón: guardar una venta, calcular, consultar datos."}, "api": {"icon": "🔌", "label": "Puerta de entrada (API)", "desc": "Recibe pedidos desde otras partes (la app, el bot, los pagos) y devuelve una respuesta."}, "datos": {"icon": "🗄️", "label": "Datos", "desc": "Define cómo se guardan los datos o cómo se conecta el sistema con la base de datos."}, "logica": {"icon": "🧠", "label": "Reglas del negocio", "desc": "Cálculos y reglas propias del negocio: precios, stock, pagos, repartos."}, "herramienta": {"icon": "🧰", "label": "Herramienta auxiliar", "desc": "Funciones de ayuda que usan muchas otras piezas (dar formato a fechas, conectarse a algo, etc.)."}, "config": {"icon": "🔧", "label": "Configuración", "desc": "Ajustes de cómo se arma o se comporta el proyecto."}, "arranque": {"icon": "🚀", "label": "Punto de arranque", "desc": "Por acá empieza a funcionar una parte del sistema."}, "prueba": {"icon": "🧪", "label": "Prueba automática", "desc": "Verifica automáticamente que otra pieza funcione bien."}, "script": {"icon": "📜", "label": "Script suelto", "desc": "Un programa para una tarea puntual: arreglos, backups, migraciones."}, "codigo": {"icon": "📄", "label": "Archivo de código", "desc": "Un archivo de código del proyecto."}}};
+const T=D.types,GI=D.groups;
+const cv=document.getElementById('c'),ctx=cv.getContext('2d'),stage=document.getElementById('stage'),tip=document.getElementById('tip');
+let W=0,H=0,dpr=1,k=1,tx=0,ty=0,alpha=1,sel=null,hov=null,drag=null,query='',cam=null,lastKey='x',hlSet=null,selSet=null;
+const pal=['#4e9af1','#f1a14e','#5fd38d','#e16fb3','#b794f4','#f1d84e','#4ed3d3','#f16f6f','#9ab36b','#c9a27e','#7aa2f7','#e0af68'];
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function hexA(h,a){const n=parseInt(h.slice(1),16);return 'rgba('+(n>>16)+','+((n>>8)&255)+','+(n&255)+','+a+')'}
+function pl(n,s,p){return n+' '+(n===1?s:p)}
+
+const files=D.nodes.map(function(n,i){return Object.assign({},n,{id:'f'+i,i:i,kind:'f',x:0,y:0,vx:0,vy:0,out:[],inn:[]})});
+const cnt={};files.forEach(function(f){cnt[f.g]=(cnt[f.g]||0)+1});
+const gkeys=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a]});
+const groups=gkeys.map(function(g,i){const h=GI[g]||{};return {id:'g'+i,gi:i,kind:'g',key:g,label:h.label||g,icon:h.icon||'📁',color:pal[i%pal.length],files:[],expanded:false,hidden:false,x:0,y:0,vx:0,vy:0,ax:0,ay:0}});
+const gby={};groups.forEach(function(g){gby[g.key]=g});
+files.forEach(function(f){f.grp=gby[f.g];f.grp.files.push(f)});
+const edgesF=D.edges.map(function(e){const a=files[e[0]],b=files[e[1]];a.out.push(b);b.inn.push(a);return [a,b]});
+files.forEach(function(f){f.r=5+Math.sqrt(f.inn.length)*2.4;f.color=f.grp.color});
+groups.forEach(function(g,i){g.r=26+Math.sqrt(g.files.length)*7;
+ const a=2*Math.PI*i/groups.length,R=groups.length>1?150+groups.length*55:0;
+ g.ax=Math.cos(a)*R;g.ay=Math.sin(a)*R;g.x=g.ax;g.y=g.ay;
+ g.files.forEach(function(f){f.x=g.ax+(Math.random()-.5)*120;f.y=g.ay+(Math.random()-.5)*120})});
+
+let items=[],aedges=[];
+function rebuild(){
+ items=[];
+ groups.forEach(function(g){if(g.hidden)return;
+  if(g.expanded){g.files.forEach(function(f){f.it=f;items.push(f)})}
+  else{g.files.forEach(function(f){f.it=g});items.push(g)}});
+ items.forEach(function(it){it.outs=new Map();it.ins=new Map()});
+ const m=new Map();
+ edgesF.forEach(function(e){const a=e[0],b=e[1];if(a.grp.hidden||b.grp.hidden)return;
+  const ia=a.it,ib=b.it;if(ia===ib)return;const key=ia.id+'>'+ib.id;let x=m.get(key);
+  if(!x){x={a:ia,b:ib,c:0,m:null,ph:Math.random()};m.set(key,x)}x.c++});
+ aedges=Array.from(m.values());
+ aedges.forEach(function(e){e.a.outs.set(e.b,e.c);e.b.ins.set(e.a,e.c)});
+ lastKey='x';
+}
+function tick(){
+ const N=items.length;
+ groups.forEach(function(g){if(g.expanded&&!g.hidden&&g.files.length){let cx=0,cy=0;g.files.forEach(function(f){cx+=f.x;cy+=f.y});g.x=cx/g.files.length;g.y=cy/g.files.length}});
+ for(let i=0;i<N;i++){const a=items[i];for(let j=i+1;j<N;j++){const b=items[j];
+  let dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy;if(d2>360000)continue;
+  if(d2<1){dx=Math.random()-.5;dy=Math.random()-.5;d2=1}
+  const d=Math.sqrt(d2),md=a.r+b.r+10;let f=(120+(a.r+b.r)*8)/d;if(d<md)f+=(md-d)*0.4;f*=alpha;
+  dx/=d;dy/=d;a.vx+=dx*f;a.vy+=dy*f;b.vx-=dx*f;b.vy-=dy*f}}
+ aedges.forEach(function(e){let dx=e.b.x-e.a.x,dy=e.b.y-e.a.y;const d=Math.sqrt(dx*dx+dy*dy)||1;
+  const rest=60+(e.a.r+e.b.r)*1.4,f=(d-rest)*0.02*alpha*Math.min(1+Math.log(e.c)*0.3,2);dx/=d;dy/=d;
+  e.a.vx+=dx*f;e.a.vy+=dy*f;e.b.vx-=dx*f;e.b.vy-=dy*f});
+ items.forEach(function(n){const g=n.kind==='g'?n:n.grp;
+  n.vx+=((g.ax-n.x)*0.004-n.x*0.001)*alpha;n.vy+=((g.ay-n.y)*0.004-n.y*0.001)*alpha;
+  if(n.kind==='f'){n.vx+=(g.x-n.x)*0.006*alpha;n.vy+=(g.y-n.y)*0.006*alpha}
+  if(n===drag){n.vx=n.vy=0;return}
+  n.vx*=0.6;n.vy*=0.6;n.x+=n.vx;n.y+=n.vy});
+ alpha*=0.992}
+
+function camTo(x,y,nk,dur){cam={t0:performance.now(),d:dur||700,cx0:(W/2-tx)/k,cy0:(H/2-ty)/k,k0:k,cx1:x,cy1:y,k1:nk}}
+function fit(list,dur){
+ list=(list||[]).filter(Boolean);if(!list.length)return;
+ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+ list.forEach(function(n){x0=Math.min(x0,n.x-n.r);x1=Math.max(x1,n.x+n.r);y0=Math.min(y0,n.y-n.r);y1=Math.max(y1,n.y+n.r+30)});
+ const w=Math.max(x1-x0,60),h=Math.max(y1-y0,60),nk=Math.min(W/(w+140),H/(h+140),2.2);
+ camTo((x0+x1)/2,(y0+y1)/2,nk,dur||800)}
+function resize(){dpr=window.devicePixelRatio||1;W=stage.clientWidth;H=stage.clientHeight;cv.width=W*dpr;cv.height=H*dpr}
+
+function expand(g){if(g.expanded)return;g.hidden=false;if(g.cb)g.cb.checked=true;g.expanded=true;const n=g.files.length;
+ g.files.forEach(function(f,i){const a=2*Math.PI*i/n,rr=20+Math.sqrt(n)*14;f.x=g.x+Math.cos(a)*rr;f.y=g.y+Math.sin(a)*rr;f.vx=f.vy=0});
+ rebuild();alpha=Math.max(alpha,0.8)}
+function collapse(g){if(!g.expanded)return;let cx=0,cy=0;g.files.forEach(function(f){cx+=f.x;cy+=f.y});
+ if(g.files.length){g.x=cx/g.files.length;g.y=cy/g.files.length}
+ g.expanded=false;if(sel&&sel.kind==='f'&&sel.grp===g)sel=g;rebuild();alpha=Math.max(alpha,0.5);showInfo()}
+function collapseAll(){groups.forEach(collapse)}
+function select(it){sel=it;lastKey='x';showInfo()}
+function focusFile(f){expand(f.grp);f.grp.hidden=false;rebuild();select(f);setTimeout(function(){camTo(f.x,f.y,Math.max(k,1.5),800)},450)}
+function focusGroup(g){g.hidden=false;if(g.cb)g.cb.checked=true;rebuild();select(g);setTimeout(function(){fit(g.expanded?g.files:[g],800)},50)}
+
+function matches(it){if(!query)return true;
+ if(it.kind==='f')return fm(it);
+ return it.label.toLowerCase().indexOf(query)>=0||it.files.some(fm)}
+function fm(f){return f.n.toLowerCase().indexOf(query)>=0||f.p.toLowerCase().indexOf(query)>=0||T[f.t].label.toLowerCase().indexOf(query)>=0||f.z.toLowerCase().indexOf(query)>=0}
+
+function calcHL(fo){aedges.forEach(function(e){e.m=null});hlSet=null;selSet=null;if(!fo)return;
+ selSet=new Set();if(fo.kind==='g'&&fo.expanded)fo.files.forEach(function(f){selSet.add(f)});else selSet.add(fo);
+ hlSet=new Set(selSet);
+ aedges.forEach(function(e){const ai=selSet.has(e.a),bi=selSet.has(e.b);
+  if(ai&&!bi){e.m='o';hlSet.add(e.b)}else if(bi&&!ai){e.m='i';hlSet.add(e.a)}else if(ai&&bi)e.m='x'})}
+function arrow(a,b,col,sz){const an=Math.atan2(b.y-a.y,b.x-a.x),s=(sz||8)/k,ex=b.x-Math.cos(an)*(b.r+2),ey=b.y-Math.sin(an)*(b.r+2);
+ ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(ex-Math.cos(an-.4)*s,ey-Math.sin(an-.4)*s);ctx.lineTo(ex-Math.cos(an+.4)*s,ey-Math.sin(an+.4)*s);ctx.fill()}
+function label(txt,x,y,size,col,bold){ctx.font=(bold?'bold ':'')+(size/k)+'px system-ui,sans-serif';ctx.textAlign='center';
+ ctx.lineWidth=3/k;ctx.strokeStyle='#0f1319';ctx.strokeText(txt,x,y);ctx.fillStyle=col;ctx.fillText(txt,x,y)}
+function cut(s,n){return s.length>n?s.slice(0,n-1)+'…':s}
+
+function draw(now){
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.translate(tx,ty);ctx.scale(k,k);
+ const focus=sel||hov;
+ const key=(focus?focus.id:'')+'|'+aedges.length+'|'+items.length;
+ if(key!==lastKey){lastKey=key;calcHL(focus)}
+ const all=document.getElementById('lab').checked;
+ groups.forEach(function(g){g.hc=null;if(!g.expanded||g.hidden||!g.files.length)return;
+  let R=0;g.files.forEach(function(f){R=Math.max(R,Math.hypot(f.x-g.x,f.y-g.y)+f.r)});R+=28;g.hc={x:g.x,y:g.y,r:R};
+  const dim=focus&&!g.files.some(function(f){return hlSet.has(f)});
+  ctx.globalAlpha=dim?0.25:1;ctx.fillStyle=hexA(g.color,.06);ctx.strokeStyle=sel===g?'#fff':hexA(g.color,.55);ctx.lineWidth=(sel===g?2.5:1.5)/k;
+  ctx.setLineDash([6/k,5/k]);ctx.beginPath();ctx.arc(g.x,g.y,R,0,7);ctx.fill();ctx.stroke();ctx.setLineDash([]);
+  label(g.icon+' '+g.label+' · '+g.files.length+' piezas',g.x,g.y-R-8/k,14,g.color,true)});
+ ctx.globalAlpha=1;
+ aedges.forEach(function(e){const a=e.a,b=e.b;let col='rgba(150,160,180,.22)',w=1+Math.log(e.c+1)*0.9;
+  if(focus){if(e.m==='o'){col='#f1a14e';w+=1.2}else if(e.m==='i'){col='#4ed3d3';w+=1.2}else if(e.m==='x'){col='rgba(210,215,230,.55)'}else col='rgba(150,160,180,.05)'}
+  ctx.strokeStyle=col;ctx.lineWidth=w/k;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+  if(e.m||(!focus&&k>1.1))arrow(a,b,col,e.m?9:7);
+  if(e.m==='o'||e.m==='i'){
+   const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy)||1,s0=a.r/L,s1=1-b.r/L;
+   for(let p=0;p<3;p++){const t=(now*0.00035+p/3+e.ph)%1,u=s0+(s1-s0)*t;ctx.fillStyle=e.m==='o'?'#ffe0b8':'#c8f5f5';ctx.beginPath();ctx.arc(a.x+dx*u,a.y+dy*u,2.6/k,0,7);ctx.fill()}
+   if(e.c>1&&(a.kind==='g'||b.kind==='g'))label(String(e.c),(a.x+b.x)/2,(a.y+b.y)/2,12,'#fff',true)}});
+ items.forEach(function(it){
+  const dim=(focus&&!hlSet.has(it))||(query&&!matches(it));
+  ctx.globalAlpha=dim?0.14:1;
+  const isSel=it===sel;
+  if(it.kind==='g'){
+   ctx.fillStyle=hexA(it.color,.25);ctx.strokeStyle=isSel?'#fff':it.color;ctx.lineWidth=(isSel?3:2)/k;
+   ctx.beginPath();ctx.arc(it.x,it.y,it.r+(isSel?Math.sin(now*0.004)*2:0),0,7);ctx.fill();ctx.stroke();
+   ctx.font=(it.r*0.9)+'px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff';ctx.fillText(it.icon,it.x,it.y+1);ctx.textBaseline='alphabetic';
+   label(it.label,it.x,it.y+it.r+16/k,13,'#fff',true);
+   label(pl(it.files.length,'pieza','piezas'),it.x,it.y+it.r+30/k,11,'#9aa5b5',false)
+  }else{
+   ctx.fillStyle=it.color;ctx.beginPath();ctx.arc(it.x,it.y,it.r,0,7);ctx.fill();
+   const mt=query&&matches(it);
+   if(isSel||mt){ctx.strokeStyle='#fff';ctx.lineWidth=(isSel?2.5:2)/k;ctx.beginPath();ctx.arc(it.x,it.y,it.r+(isSel?Math.sin(now*0.004)*1.5:0)+2/k,0,7);ctx.stroke()}
+   if(it.r*k>=11){ctx.font=(it.r*1.1)+'px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff';ctx.fillText(T[it.t].icon,it.x,it.y+1);ctx.textBaseline='alphabetic'}
+   if(all||k>1.3||(focus&&hlSet.has(it))||mt||it.r*k>=14)label(cut(it.n,28),it.x,it.y+it.r+13/k,12,'#d8dee9',false)}
+ });
+ ctx.globalAlpha=1}
+function loop(now){
+ if(cam){const t=Math.min((now-cam.t0)/cam.d,1),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  k=cam.k0*Math.pow(cam.k1/cam.k0,e);const cx=cam.cx0+(cam.cx1-cam.cx0)*e,cy=cam.cy0+(cam.cy1-cam.cy0)*e;tx=W/2-cx*k;ty=H/2-cy*k;if(t>=1)cam=null}
+ if(alpha>0.003||drag){tick();if(drag)alpha=Math.max(alpha,0.2)}
+ draw(now);requestAnimationFrame(loop)}
+
+/* ---------- panel de información ---------- */
+function impact(f){if(f._imp!==undefined)return f._imp;const seen=new Set([f]),q=[f];
+ while(q.length){const c=q.pop();c.inn.forEach(function(x){if(!seen.has(x)){seen.add(x);q.push(x)}})}
+ f._imp=seen.size-1;return f._imp}
+function chips(arr){if(!arr.length)return '<div class="muted">ninguna</div>';
+ const s=arr.slice().sort(function(a,b){return a.n.localeCompare(b.n)});
+ return s.slice(0,30).map(function(x){return '<div class="item" data-f="'+x.i+'">'+T[x.t].icon+' '+esc(x.n)+' <span class="badge">'+esc(x.grp.label)+'</span></div>'}).join('')+(s.length>30?'<div class="muted">… y '+(s.length-30)+' más</div>':'')}
+function infoHome(){
+ const top=files.slice().sort(function(a,b){return b.inn.length-a.inn.length}).filter(function(f){return f.inn.length}).slice(0,6);
+ const orph=files.filter(function(f){return !f.inn.length}).length;
+ return '<div class="cards"><div><b>'+groups.length+'</b>zonas</div><div><b>'+files.length+'</b>piezas</div><div><b>'+edgesF.length+'</b>conexiones</div></div>'+
+ '<h2>🏆 Las piezas más importantes</h2><div class="hint">Son las que más piezas necesitan. Tocarlas puede afectar a muchas otras.</div>'+
+ top.map(function(f){return '<div class="item" data-f="'+f.i+'">'+T[f.t].icon+' '+esc(f.n)+' <span class="badge">usada por '+f.inn.length+'</span></div>'}).join('')+
+ '<h2>🏝️ Piezas que nadie usa</h2><div class="hint">'+pl(orph,'pieza','piezas')+' no son usadas directamente por otra. Pueden ser puntos de arranque (se ejecutan solos), scripts sueltos o archivos que ya no sirven. Aparecen como puntitos aislados.</div>'+
+ '<div class="hint">👈 Hacé clic en cualquier burbuja del mapa para ver qué es.</div>'}
+function infoFile(f){
+ const ty=T[f.t],imp=impact(f);let risk,cls;
+ if(!f.inn.length){cls='ok';risk='Nadie usa esta pieza de forma directa. Puede ser un punto de arranque (algo que se ejecuta solo) o un archivo que quedó sin uso.'}
+ else if(imp<5){cls='ok';risk='<b>Impacto bajo.</b> Si se cambia o falla, podrían verse afectadas '+pl(imp,'pieza','piezas')+'.'}
+ else if(imp<15){cls='mid';risk='<b>Impacto medio.</b> Si se cambia o falla, podrían verse afectadas '+pl(imp,'pieza','piezas')+'. Conviene probar todo después de tocarla.'}
+ else{cls='high';risk='<b>Impacto alto.</b> Es una pieza central: si se cambia o falla, podrían verse afectadas '+pl(imp,'pieza','piezas')+'. ¡Tocala con cuidado!'}
+ const needs=f.out.length?'Para funcionar necesita de <b>'+pl(f.out.length,'pieza','piezas')+'</b>':'No necesita de otras piezas del proyecto';
+ const used=f.inn.length?'es usada directamente por <b>'+pl(f.inn.length,'pieza','piezas')+'</b>':'ninguna otra pieza la usa directamente';
+ return '<div class="card"><div class="big">'+ty.icon+'</div><h3>'+esc(f.n)+'</h3><div class="muted">'+esc(ty.label)+' · zona '+esc(f.grp.label)+'</div>'+
+ '<p>'+esc(ty.desc)+'</p>'+(f.d?'<div class="note">📝 Nota que dejó quien lo programó: «'+esc(f.d)+'»</div>':'')+
+ '<p>'+needs+' y '+used+'.</p><div class="risk '+cls+'">'+risk+'</div></div>'+
+ '<h2 class="o">➡️ Necesita a ('+f.out.length+')</h2>'+chips(f.out)+
+ '<h2 class="i">⬅️ La usan ('+f.inn.length+')</h2>'+chips(f.inn)+
+ '<details><summary>🔍 Detalles técnicos (opcional)</summary><p>Archivo: <code>'+esc(f.p)+'</code><br>'+f.l+' líneas</p>'+
+ '<p>Librerías externas que usa:<br>'+(f.e.length?f.e.map(function(x){return '<span class="tag">'+esc(x)+'</span>'}).join(''):'<span class="muted">ninguna</span>')+'</p>'+
+ '<button data-act="copy">📋 Copiar ruta del archivo</button></details>'+
+ '<p><button data-act="home">← Volver al resumen</button> <button data-act="closegrp">Cerrar esta zona</button></p>'}
+function infoGroup(g){
+ const types={};g.files.forEach(function(f){types[f.t]=(types[f.t]||0)+1});
+ const tt=Object.keys(types).sort(function(a,b){return types[b]-types[a]}).map(function(t){return '<span class="tag">'+T[t].icon+' '+esc(T[t].label)+' ×'+types[t]+'</span>'}).join('');
+ const outG={},inG={};
+ edgesF.forEach(function(e){const a=e[0].grp,b=e[1].grp;if(a===b)return;if(a===g)outG[b.gi]=(outG[b.gi]||0)+1;if(b===g)inG[a.gi]=(inG[a.gi]||0)+1});
+ function gl(o){const ks=Object.keys(o).sort(function(a,b){return o[b]-o[a]});if(!ks.length)return '<div class="muted">ninguna</div>';
+  return ks.map(function(i){const x=groups[i];return '<div class="item" data-g="'+i+'">'+x.icon+' '+esc(x.label)+' <span class="badge">'+pl(o[i],'conexión','conexiones')+'</span></div>'}).join('')}
+ let inside=0;edgesF.forEach(function(e){if(e[0].grp===g&&e[1].grp===g)inside++});
+ const top=g.files.slice().sort(function(a,b){return b.inn.length-a.inn.length}).filter(function(f){return f.inn.length}).slice(0,5);
+ return '<div class="card"><div class="big">'+g.icon+'</div><h3>Zona: '+esc(g.label)+'</h3><div class="muted">'+pl(g.files.length,'pieza','piezas')+' · '+pl(inside,'conexión interna','conexiones internas')+'</div>'+
+ '<p>'+tt+'</p>'+
+ '<p>'+(g.expanded?'<button data-act="closegrp">Cerrar zona</button>':'<button class="primary" data-act="opengrp">🔎 Abrir zona (ver sus piezas)</button>')+'</p></div>'+
+ '<h2 class="o">➡️ Esta zona necesita de</h2>'+gl(outG)+
+ '<h2 class="i">⬅️ Esta zona es usada por</h2>'+gl(inG)+
+ '<h2>🏆 Sus piezas más importantes</h2>'+(top.length?chips(top):'<div class="muted">Ninguna pieza es usada por otra dentro de esta zona.</div>')+
+ '<p><button data-act="home">← Volver al resumen</button></p>'}
+function showInfo(){
+ const el=document.getElementById('info');
+ el.innerHTML=!sel?infoHome():(sel.kind==='f'?infoFile(sel):infoGroup(sel));
+ el.querySelectorAll('[data-f]').forEach(function(d){d.onclick=function(){focusFile(files[+d.dataset.f])}});
+ el.querySelectorAll('[data-g]').forEach(function(d){d.onclick=function(){focusGroup(groups[+d.dataset.g])}});
+ el.querySelectorAll('[data-act]').forEach(function(d){d.onclick=function(){act(d.dataset.act)}})}
+function act(a){
+ const g=sel?(sel.kind==='g'?sel:sel.grp):null;
+ if(a==='home')select(null);
+ else if(a==='opengrp'&&g){expand(g);select(g);setTimeout(function(){fit(g.files,900)},700)}
+ else if(a==='closegrp'&&g){collapse(g);select(g)}
+ else if(a==='copy'&&sel&&sel.p){try{navigator.clipboard.writeText(sel.p)}catch(e){}}}
+
+/* ---------- leyenda, buscador ---------- */
+const leg=document.getElementById('legend');
+groups.forEach(function(g){const d=document.createElement('div');d.className='leg';
+ d.innerHTML='<input type="checkbox" checked><span class="dot" style="background:'+g.color+'"></span><span class="t">'+g.icon+' '+esc(g.label)+'</span><span class="muted">'+g.files.length+'</span>';
+ g.cb=d.querySelector('input');
+ g.cb.onchange=function(){g.hidden=!g.cb.checked;if(g.hidden&&sel&&(sel===g||sel.grp===g))sel=null;rebuild();showInfo()};
+ d.querySelector('.t').onclick=function(){focusGroup(g)};leg.appendChild(d)});
+const qi=document.getElementById('q');
+qi.oninput=function(){query=qi.value.trim().toLowerCase();
+ const n=query?files.filter(fm).length:0;document.getElementById('qn').textContent=query?(n?pl(n,'pieza encontrada','piezas encontradas')+' (Enter para ir a la primera)':'No encontré nada con eso'):''};
+qi.onkeydown=function(e){if(e.key==='Enter'&&query){const m=files.find(function(f){return !f.grp.hidden&&fm(f)});if(m)focusFile(m)}};
+
+/* ---------- mouse ---------- */
+function pick(ev){const r=cv.getBoundingClientRect(),x=(ev.clientX-r.left-tx)/k,y=(ev.clientY-r.top-ty)/k;
+ let best=null,bd=1e9;
+ items.forEach(function(it){const d=Math.hypot(it.x-x,it.y-y);if(d<it.r+4/k&&d<bd){bd=d;best=it}});
+ if(best)return best;
+ let bg=null;groups.forEach(function(g){if(g.expanded&&!g.hidden&&g.hc){const d=Math.hypot(g.hc.x-x,g.hc.y-y);if(d<g.hc.r&&(!bg||g.hc.r<bg.hc.r))bg=g}});
+ return bg}
+let pan=false,moved=false,lx=0,ly=0,downIt=null;
+cv.onmousedown=function(e){moved=false;lx=e.clientX;ly=e.clientY;cam=null;downIt=pick(e);
+ if(downIt&&items.indexOf(downIt)>=0)drag=downIt;else pan=true;cv.style.cursor='grabbing'};
+window.onmousemove=function(e){
+ if(drag){const r=cv.getBoundingClientRect();drag.x=(e.clientX-r.left-tx)/k;drag.y=(e.clientY-r.top-ty)/k;if(Math.abs(e.clientX-lx)+Math.abs(e.clientY-ly)>3)moved=true}
+ else if(pan){tx+=e.clientX-lx;ty+=e.clientY-ly;lx=e.clientX;ly=e.clientY;moved=true}
+ else if(e.target===cv){const n=pick(e);hov=n;cv.style.cursor=n?'pointer':'grab';
+  if(n){const sr=stage.getBoundingClientRect();tip.style.display='block';tip.style.left=(e.clientX-sr.left+14)+'px';tip.style.top=(e.clientY-sr.top+14)+'px';
+   tip.innerHTML=n.kind==='f'?T[n.t].icon+' <b>'+esc(n.n)+'</b><small>'+esc(T[n.t].label)+' · '+esc(n.grp.label)+'</small>':
+    n.icon+' <b>'+esc(n.label)+'</b><small>Zona · '+pl(n.files.length,'pieza','piezas')+' · doble clic para '+(n.expanded?'cerrar':'abrir')+'</small>'}
+  else tip.style.display='none'}
+ else{hov=null;tip.style.display='none'}};
+window.onmouseup=function(e){if(!moved&&e.target===cv){select(pick(e))}drag=null;pan=false;cv.style.cursor='grab'};
+cv.ondblclick=function(e){const n=pick(e);if(n&&n.kind==='g'){if(n.expanded){collapse(n)}else{expand(n);select(n);setTimeout(function(){fit(n.files,900)},700)}}};
+cv.onwheel=function(e){e.preventDefault();cam=null;const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+ const f=e.deltaY<0?1.15:1/1.15,nk=Math.min(Math.max(k*f,0.1),8);tx=mx-(mx-tx)*nk/k;ty=my-(my-ty)*nk/k;k=nk};
+window.onresize=resize;
+
+/* ---------- barra superior ---------- */
+document.getElementById('bOpen').onclick=function(){groups.forEach(function(g){if(!g.hidden)expand(g)});setTimeout(function(){fit(items,1000)},900)};
+document.getElementById('bClose').onclick=function(){collapseAll();select(null);fit(items,800)};
+document.getElementById('bShake').onclick=function(){alpha=1};
+document.getElementById('bHelp').onclick=function(){const i=document.getElementById('intro');i.style.display=i.style.display==='none'?'block':'none'};
+document.getElementById('iClose').onclick=function(){document.getElementById('intro').style.display='none'};
+document.getElementById('iTour').onclick=function(){startTour()};
+document.getElementById('bTour').onclick=function(){startTour()};
+
+/* ---------- tour guiado ---------- */
+let steps=[],si=-1,tok=0;
+function later(fn,ms){const t=tok;setTimeout(function(){if(t===tok)fn()},ms)}
+function buildTour(){
+ const big=groups[0];
+ const pairs={};edgesF.forEach(function(e){const a=e[0].grp,b=e[1].grp;if(a===b)return;const kk=a.gi+'>'+b.gi;pairs[kk]=(pairs[kk]||0)+1});
+ let bp=null,bc=0;Object.keys(pairs).forEach(function(kk){if(pairs[kk]>bc){bc=pairs[kk];bp=kk}});
+ const top=files.slice().sort(function(a,b){return b.inn.length-a.inn.length})[0];
+ const orph=files.filter(function(f){return !f.inn.length}).length;
+ steps=[];
+ steps.push({t:'👋 Bienvenido',h:'<p>Este mapa muestra tu sistema visto desde arriba: <b>'+pl(groups.length,'zona','zonas')+'</b>, <b>'+pl(files.length,'pieza','piezas')+'</b> (archivos) y <b>'+pl(edgesF.length,'conexión','conexiones')+'</b> entre ellas.</p><p>Una conexión significa que una pieza necesita a otra para funcionar.</p>',
+  run:function(){collapseAll();select(null);fit(items,900)}});
+ steps.push({t:'🫧 Las zonas',h:'<p>Cada burbuja grande es una <b>zona</b>: un grupo de piezas que trabajan sobre lo mismo.</p><p>La más grande es <b>'+big.icon+' '+esc(big.label)+'</b>, con '+pl(big.files.length,'pieza','piezas')+'. Mirá el panel de la derecha: te cuenta de qué está hecha.</p>',
+  run:function(){collapseAll();select(big);fit(items,900)}});
+ if(bp){const ids=bp.split('>'),ga=groups[+ids[0]],gb=groups[+ids[1]];
+  steps.push({t:'🔗 Quién necesita a quién',h:'<p>Las líneas unen zonas que trabajan juntas. Los puntitos viajan desde la que <b>necesita</b> hacia la que <b>es necesitada</b>.</p><p>La conexión más fuerte es de <b>'+ga.icon+' '+esc(ga.label)+'</b> hacia <b>'+gb.icon+' '+esc(gb.label)+'</b>, con '+pl(bc,'conexión','conexiones')+'.</p>',
+   run:function(){collapseAll();select(ga);fit(items,900)}})}
+ if(top&&top.inn.length){steps.push({t:'🏆 La pieza más importante',h:'<p>Abrimos la zona <b>'+esc(top.grp.label)+'</b> para ver sus piezas por dentro.</p><p><b>'+T[top.t].icon+' '+esc(top.n)+'</b> es la más usada: la necesitan '+pl(top.inn.length,'pieza','piezas')+'. Si se rompe, el daño se contagia; por eso conviene tocarla con cuidado.</p>',
+  run:function(){focusFile(top)}})}
+ steps.push({t:'🏝️ Piezas sueltas',h:'<p>'+pl(orph,'pieza','piezas')+' no son usadas por ninguna otra. No siempre es malo: algunas son puntos de arranque o scripts que se ejecutan a mano. Otras pueden ser código viejo que ya no sirve.</p>',
+  run:function(){collapseAll();select(null);fit(items,900)}});
+ steps.push({t:'🚀 Ahora explorá vos',h:'<p>• <b>Clic</b> en algo: te explica qué es y cuánto impacto tiene.<br>• <b>Doble clic</b> en una zona: la abre o la cierra.<br>• <b>Arrastrá</b> burbujas para acomodarlas, <b>rueda</b> para acercar.<br>• Usá el <b>buscador</b> de la derecha para ir directo a algo.</p>',
+  run:function(){collapseAll();select(null);fit(items,900)}})}
+function startTour(){document.getElementById('intro').style.display='none';buildTour();document.getElementById('tour').style.display='block';showStep(0)}
+function showStep(i){tok++;si=i;const s=steps[i];const t=document.getElementById('tour');
+ t.querySelector('.tn').textContent='Paso '+(i+1)+' de '+steps.length;t.querySelector('h3').textContent=s.t;t.querySelector('.tx').innerHTML=s.h;
+ document.getElementById('tPrev').disabled=i===0;document.getElementById('tNext').textContent=i===steps.length-1?'Terminar ✔':'Siguiente ▶';s.run()}
+document.getElementById('tPrev').onclick=function(){if(si>0)showStep(si-1)};
+document.getElementById('tNext').onclick=function(){if(si<steps.length-1)showStep(si+1);else endTour()};
+document.getElementById('tEnd').onclick=function(){endTour()};
+function endTour(){tok++;document.getElementById('tour').style.display='none'}
+
+resize();
+if(groups.length===1)groups[0].expanded=true;
+rebuild();
+for(let i=0;i<250;i++)tick();
+alpha=0.05;fit(items,1);showInfo();requestAnimationFrame(loop);
+</script></body></html>

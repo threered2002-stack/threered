@@ -47,7 +47,7 @@ export function CustomerRow({ customer: c }: CustomerRowProps) {
       >
         <td className="px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-white font-bold text-sm group-hover:bg-violet-500/20 group-hover:text-violet-400 transition-colors">
+            <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-white font-bold text-sm group-hover:bg-red-500/20 group-hover:text-red-400 transition-colors">
               {c.first_name.charAt(0)}{c.last_name ? c.last_name.charAt(0) : ''}
             </div>
             <div>
@@ -98,7 +98,7 @@ export function CustomerRow({ customer: c }: CustomerRowProps) {
                   e.stopPropagation()
                   router.push(`/customers/${c.id}/edit`)
                 }}
-                className="p-1.5 text-neutral-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors"
+                className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                 title="Editar cliente"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -122,7 +122,7 @@ export function CustomerRow({ customer: c }: CustomerRowProps) {
         <tr className="bg-neutral-900/60 border-t border-neutral-800/50">
           <td colSpan={4} className="px-6 py-4">
             <div className="flex items-start gap-3 text-sm">
-              <AlignLeft className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+              <AlignLeft className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-neutral-300 mb-1">Notas Internas:</p>
                 <p className="text-neutral-400 whitespace-pre-wrap">

@@ -32,85 +32,72 @@ export default function RegisterPage() {
 
   return (
     <>
-      <h2 className="text-xl font-semibold text-white mb-1">Crear Cuenta</h2>
-      <p className="text-sm text-neutral-400 mb-6">
-        Registrate para comenzar a gestionar tu negocio
-      </p>
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-white mb-2">Register</h2>
+      </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+        <div className="mb-6 p-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="fullName" className="block text-sm font-medium text-neutral-300 mb-1.5">
-            Nombre completo
-          </label>
           <input
             id="fullName"
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="Juan Pérez"
+            placeholder="Full Name"
             required
-            className="w-full px-3.5 py-2.5 bg-neutral-800/50 border border-neutral-700 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+            className="w-full px-5 py-3.5 bg-white/[0.03] border border-white/10 rounded-full text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 transition-all text-sm"
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-neutral-300 mb-1.5">
-            Email
-          </label>
           <input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="tu@email.com"
+            placeholder="Email Address"
             required
-            className="w-full px-3.5 py-2.5 bg-neutral-800/50 border border-neutral-700 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+            className="w-full px-5 py-3.5 bg-white/[0.03] border border-white/10 rounded-full text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 transition-all text-sm"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-neutral-300 mb-1.5">
-            Contraseña
-          </label>
           <input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mínimo 6 caracteres"
+            placeholder="Password (min. 6 characters)"
             required
-            className="w-full px-3.5 py-2.5 bg-neutral-800/50 border border-neutral-700 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+            className="w-full px-5 py-3.5 bg-white/[0.03] border border-white/10 rounded-full text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 transition-all text-sm"
           />
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-neutral-300 mb-1.5">
-            Confirmar contraseña
-          </label>
           <input
             id="confirmPassword"
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Repetí tu contraseña"
+            placeholder="Confirm Password"
             required
-            className="w-full px-3.5 py-2.5 bg-neutral-800/50 border border-neutral-700 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+            className="w-full px-5 py-3.5 bg-white/[0.03] border border-white/10 rounded-full text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 transition-all text-sm"
           />
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-2.5 px-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3.5 px-4 bg-white hover:bg-neutral-200 text-black font-semibold rounded-full transition-all duration-200 shadow-lg shadow-white/10 hover:shadow-white/20 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
         >
           {isLoading ? (
-            <span className="inline-flex items-center gap-2">
+            <span className="inline-flex items-center justify-center gap-2">
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -118,19 +105,19 @@ export default function RegisterPage() {
               Creando cuenta...
             </span>
           ) : (
-            'Crear Cuenta'
+            'Register'
           )}
         </button>
       </form>
 
-      <div className="mt-6 text-center">
-        <p className="text-sm text-neutral-500">
-          ¿Ya tenés cuenta?{' '}
+      <div className="mt-8 text-center">
+        <p className="text-sm text-neutral-400">
+          Already have an account?{' '}
           <Link
             href="/login"
-            className="text-violet-400 hover:text-violet-300 font-medium transition-colors"
+            className="text-white font-semibold hover:text-neutral-300 transition-colors"
           >
-            Iniciá sesión
+            Login
           </Link>
         </p>
       </div>

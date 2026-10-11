@@ -4,42 +4,25 @@ export default function AuthLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950">
-      {/* Decorative background elements */}
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] relative overflow-hidden">
+      {/* Decorative background elements matching the red aesthetic */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-500/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-20 w-[600px] h-[600px] bg-red-600/20 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-40 -left-20 w-[600px] h-[600px] bg-rose-600/20 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] border-[1px] border-red-500/10 rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] border-[1px] border-red-500/5 rounded-full" />
       </div>
 
-      <div className="relative w-full max-w-md mx-auto px-4">
-        {/* Logo / Brand */}
+      <div className="relative w-full max-w-[420px] mx-auto px-4 z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 mb-4 shadow-lg shadow-violet-500/25">
-            <svg
-              className="w-7 h-7 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
-              />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
-            Sistema PADRE
+          <h1 className="text-5xl font-black tracking-tighter">
+            <span className="text-white">three</span>
+            <span className="text-red-500">red</span>
           </h1>
-          <p className="text-sm text-neutral-500 mt-1">
-            Gestión Integral Multi-Rubro
-          </p>
         </div>
 
         {/* Card */}
-        <div className="bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 rounded-2xl p-6 shadow-2xl">
+        <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] rounded-[24px] p-8 shadow-2xl">
           {children}
         </div>
       </div>

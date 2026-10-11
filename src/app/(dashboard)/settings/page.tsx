@@ -87,7 +87,7 @@ export default function SettingsPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] animate-in fade-in">
-        <Loader2 className="w-8 h-8 text-violet-500 animate-spin mb-4" />
+        <Loader2 className="w-8 h-8 text-red-500 animate-spin mb-4" />
         <p className="text-neutral-500 text-sm">Cargando configuración...</p>
       </div>
     )
@@ -105,7 +105,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Settings className="w-6 h-6 text-violet-400" />
+          <Settings className="w-6 h-6 text-red-400" />
           Configuración
         </h1>
         <p className="text-neutral-400 mt-1">
@@ -121,7 +121,7 @@ export default function SettingsPage() {
             onClick={() => setActiveTab(tab.id as TabType)}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === tab.id 
-                ? 'border-violet-500 text-violet-400' 
+                ? 'border-red-500 text-red-400' 
                 : 'border-transparent text-neutral-400 hover:text-white hover:border-neutral-700'
             }`}
           >
@@ -136,7 +136,7 @@ export default function SettingsPage() {
         <div className="bg-neutral-900/40 border border-neutral-800/80 rounded-2xl overflow-hidden animate-in fade-in">
           <div className="p-6 border-b border-neutral-800/80">
             <h2 className="text-lg font-medium text-white flex items-center gap-2">
-              <Box className="w-5 h-5 text-violet-400" />
+              <Box className="w-5 h-5 text-red-400" />
               Módulos del Sistema
             </h2>
             <p className="text-sm text-neutral-500 mt-1">Activa o desactiva las secciones según las necesidades de tu empresa.</p>
@@ -145,7 +145,7 @@ export default function SettingsPage() {
             {modules.map((mod) => (
               <div key={mod.id} className="p-6 flex items-center justify-between hover:bg-neutral-800/20 transition-colors">
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-colors ${mod.is_active ? 'bg-violet-500/10' : 'bg-neutral-800/50 grayscale opacity-50'}`}>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-colors ${mod.is_active ? 'bg-red-500/10' : 'bg-neutral-800/50 grayscale opacity-50'}`}>
                     {ICONS[mod.slug] || '⚙️'}
                   </div>
                   <div>
@@ -160,8 +160,8 @@ export default function SettingsPage() {
                 <button
                   disabled={isSaving === mod.id}
                   onClick={() => handleToggleModule(mod)}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-neutral-900 ${
-                    mod.is_active ? 'bg-violet-600' : 'bg-neutral-700'
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-neutral-900 ${
+                    mod.is_active ? 'bg-red-600' : 'bg-neutral-700'
                   } ${isSaving === mod.id ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
                 >
                   <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${mod.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
@@ -180,7 +180,7 @@ export default function SettingsPage() {
         >
           <div className="p-6 border-b border-neutral-800/80">
             <h2 className="text-lg font-medium text-white flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-violet-400" />
+              <Building2 className="w-5 h-5 text-red-400" />
               Perfil de la Empresa
             </h2>
             <p className="text-sm text-neutral-500 mt-1">Estos datos aparecerán en los reportes y facturas.</p>
@@ -193,7 +193,7 @@ export default function SettingsPage() {
                   type="text" 
                   value={profileForm.tax_id}
                   onChange={e => setProfileForm(p => ({ ...p, tax_id: e.target.value }))}
-                  className="w-full px-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 transition-all" 
+                  className="w-full px-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 transition-all" 
                   placeholder="Ej: 30-12345678-9"
                 />
               </div>
@@ -203,7 +203,7 @@ export default function SettingsPage() {
                   type="text" 
                   value={profileForm.phone}
                   onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))}
-                  className="w-full px-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 transition-all" 
+                  className="w-full px-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 transition-all" 
                   placeholder="Ej: +54 9 11 1234-5678"
                 />
               </div>
@@ -213,7 +213,7 @@ export default function SettingsPage() {
                   type="text" 
                   value={profileForm.address}
                   onChange={e => setProfileForm(p => ({ ...p, address: e.target.value }))}
-                  className="w-full px-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 transition-all" 
+                  className="w-full px-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 transition-all" 
                   placeholder="Ej: Av. Corrientes 1234, CABA"
                 />
               </div>
@@ -223,7 +223,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={isSaving === 'profile'}
-                className="inline-flex items-center gap-2 px-6 py-2 bg-violet-600 hover:bg-violet-500 disabled:bg-neutral-800 text-white font-medium rounded-xl transition-all shadow-lg shadow-violet-500/20"
+                className="inline-flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-500 disabled:bg-neutral-800 text-white font-medium rounded-xl transition-all shadow-lg shadow-red-500/20"
               >
                 {isSaving === 'profile' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Guardar Perfil
@@ -241,7 +241,7 @@ export default function SettingsPage() {
         >
           <div className="p-6 border-b border-neutral-800/80">
             <h2 className="text-lg font-medium text-white flex items-center gap-2">
-              <Bell className="w-5 h-5 text-violet-400" />
+              <Bell className="w-5 h-5 text-red-400" />
               Alertas y Notificaciones
             </h2>
             <p className="text-sm text-neutral-500 mt-1">Configurá umbrales globales y correos automáticos.</p>
@@ -255,7 +255,7 @@ export default function SettingsPage() {
                   min="0"
                   value={alertsForm.global_min_stock}
                   onChange={e => setAlertsForm(a => ({ ...a, global_min_stock: parseInt(e.target.value) || 0 }))}
-                  className="w-full sm:w-1/3 px-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 transition-all" 
+                  className="w-full sm:w-1/3 px-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 transition-all" 
                 />
                 <p className="text-xs text-neutral-500 mt-2">Avisar cuando cualquier producto caiga por debajo de esta cantidad.</p>
               </div>
@@ -269,7 +269,7 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => setAlertsForm(a => ({ ...a, daily_report_email: !a.daily_report_email }))}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                    alertsForm.daily_report_email ? 'bg-violet-600' : 'bg-neutral-700'
+                    alertsForm.daily_report_email ? 'bg-red-600' : 'bg-neutral-700'
                   }`}
                 >
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${alertsForm.daily_report_email ? 'translate-x-6' : 'translate-x-1'}`} />
@@ -281,7 +281,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={isSaving === 'alerts'}
-                className="inline-flex items-center gap-2 px-6 py-2 bg-violet-600 hover:bg-violet-500 disabled:bg-neutral-800 text-white font-medium rounded-xl transition-all shadow-lg shadow-violet-500/20"
+                className="inline-flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-500 disabled:bg-neutral-800 text-white font-medium rounded-xl transition-all shadow-lg shadow-red-500/20"
               >
                 {isSaving === 'alerts' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Guardar Alertas
@@ -296,7 +296,7 @@ export default function SettingsPage() {
         <div className="bg-neutral-900/40 border border-neutral-800/80 rounded-2xl overflow-hidden animate-in fade-in">
           <div className="p-6 border-b border-neutral-800/80">
             <h2 className="text-lg font-medium text-white flex items-center gap-2">
-              <Palette className="w-5 h-5 text-violet-400" />
+              <Palette className="w-5 h-5 text-red-400" />
               Apariencia
             </h2>
             <p className="text-sm text-neutral-500 mt-1">Ajustá la interfaz del sistema a tu preferencia visual.</p>
@@ -307,7 +307,7 @@ export default function SettingsPage() {
             <div className="relative">
               {isSaving === 'appearance' && (
                 <div className="absolute top-0 right-0">
-                  <Loader2 className="w-4 h-4 text-violet-500 animate-spin" />
+                  <Loader2 className="w-4 h-4 text-red-500 animate-spin" />
                 </div>
               )}
               <h3 className="text-sm font-medium text-neutral-400 mb-4">Tema de Interfaz</h3>
@@ -320,7 +320,7 @@ export default function SettingsPage() {
                     handleSaveSettings('appearance', payload);
                   }}
                   className={`flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${
-                    appearanceForm.theme === 'dark' ? 'border-violet-500 bg-violet-500/5' : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'
+                    appearanceForm.theme === 'dark' ? 'border-red-500 bg-red-500/5' : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'
                   }`}
                 >
                   <div className="w-full h-20 rounded-lg bg-neutral-950 border border-neutral-800 flex flex-col p-2 gap-2">
@@ -341,7 +341,7 @@ export default function SettingsPage() {
                     handleSaveSettings('appearance', payload);
                   }}
                   className={`flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${
-                    appearanceForm.theme === 'light' ? 'border-violet-500 bg-violet-500/5' : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'
+                    appearanceForm.theme === 'light' ? 'border-red-500 bg-red-500/5' : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'
                   }`}
                 >
                   <div className="w-full h-20 rounded-lg bg-white border border-neutral-200 flex flex-col p-2 gap-2">

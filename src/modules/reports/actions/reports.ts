@@ -163,21 +163,48 @@ export async function getTopCustomers(orgId: string) {
     .from('sales')
     .select(`
       total_cents,
-      customer:customers (name)
+      customer_id,
+      customer:customers (id, first_name, last_name)
     `)
     .eq('organization_id', orgId)
-    .not('customer_id', 'is', null)
+    .neq('status', 'voided')
 
   if (error) {
-    console.error('Error fetching top customers:', error)
-    return []
+    console.error('Error fetching top customers from sales:', error)
+    
+    // Fallback: try v_customer_summary view
+    const { data: viewData, error: viewError } = await supabase
+      .from('v_customer_summary')
+      .select('id, full_name, first_name, last_name, total_purchases, total_spent_cents')
+      .eq('organization_id', orgId)
+      .gt('total_purchases', 0)
+      .order('total_spent_cents', { ascending: false })
+      .limit(5)
+
+    if (viewError) {
+      console.error('Error fetching top customers from view:', viewError)
+      return []
+    }
+
+    return (viewData || []).map((c: any) => ({
+      name: c.full_name || [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Cliente',
+      count: Number(c.total_purchases) || 0,
+      total: (Number(c.total_spent_cents) || 0) / 100
+    }))
   }
 
   const customerTotals: Record<string, { count: number, total: number }> = {}
 
   data.forEach((sale: any) => {
-    const cName = sale.customer?.name || 'Consumidor Final'
-    const total = sale.total_cents / 100
+    let cName = 'Consumidor Final'
+    if (sale.customer) {
+      const fullName = [sale.customer.first_name, sale.customer.last_name]
+        .filter(Boolean)
+        .join(' ')
+        .trim()
+      if (fullName) cName = fullName
+    }
+    const total = (sale.total_cents || 0) / 100
 
     if (!customerTotals[cName]) {
       customerTotals[cName] = { count: 0, total: 0 }
@@ -186,11 +213,15 @@ export async function getTopCustomers(orgId: string) {
     customerTotals[cName].total += total
   })
 
-  return Object.entries(customerTotals)
+  // If there are registered customers among sales, show them in order
+  const result = Object.entries(customerTotals)
     .map(([name, stats]) => ({
       name,
       ...stats
     }))
     .sort((a, b) => b.total - a.total)
     .slice(0, 5)
+
+  return result
 }
+

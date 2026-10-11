@@ -119,7 +119,7 @@ function EditCustomerContent() {
           {/* Info Personal */}
           <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 space-y-6">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-              <User className="w-5 h-5 text-violet-400" />
+              <User className="w-5 h-5 text-red-400" />
               Datos Personales
             </h2>
 
@@ -132,7 +132,7 @@ function EditCustomerContent() {
                   required
                   value={formData.first_name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all placeholder:text-neutral-600"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all placeholder:text-neutral-600"
                   placeholder="Ej: Juan"
                 />
               </div>
@@ -143,7 +143,7 @@ function EditCustomerContent() {
                   name="last_name"
                   value={formData.last_name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all placeholder:text-neutral-600"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all placeholder:text-neutral-600"
                   placeholder="Ej: Pérez"
                 />
               </div>
@@ -158,7 +158,7 @@ function EditCustomerContent() {
                   name="document_type"
                   value={formData.document_type}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
                 >
                   {DOCUMENT_TYPES.map(type => (
                     <option key={type.value} value={type.value}>{type.label}</option>
@@ -167,7 +167,7 @@ function EditCustomerContent() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-1.5 flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-violet-400" />
+                  <CreditCard className="w-4 h-4 text-red-400" />
                   Número
                 </label>
                 <input
@@ -175,7 +175,7 @@ function EditCustomerContent() {
                   name="document_number"
                   value={formData.document_number}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all placeholder:text-neutral-600"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all placeholder:text-neutral-600"
                   placeholder="Sin puntos ni guiones"
                 />
               </div>
@@ -185,14 +185,14 @@ function EditCustomerContent() {
           {/* Contacto & Ubicación */}
           <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 space-y-6">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-              <MapPin className="w-5 h-5 text-violet-400" />
+              <MapPin className="w-5 h-5 text-red-400" />
               Contacto y Ubicación
             </h2>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-1.5 flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-violet-400" />
+                  <Mail className="w-4 h-4 text-red-400" />
                   Email
                 </label>
                 <input
@@ -200,13 +200,13 @@ function EditCustomerContent() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all placeholder:text-neutral-600"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all placeholder:text-neutral-600"
                   placeholder="juan@email.com"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-1.5 flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-violet-400" />
+                  <Phone className="w-4 h-4 text-red-400" />
                   Teléfono
                 </label>
                 <input
@@ -214,7 +214,7 @@ function EditCustomerContent() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all placeholder:text-neutral-600"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all placeholder:text-neutral-600"
                   placeholder="Cod. de área + número"
                 />
               </div>
@@ -228,7 +228,7 @@ function EditCustomerContent() {
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all placeholder:text-neutral-600"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all placeholder:text-neutral-600"
                   placeholder="Calle 123"
                 />
               </div>
@@ -239,7 +239,7 @@ function EditCustomerContent() {
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all placeholder:text-neutral-600"
+                  className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all placeholder:text-neutral-600"
                   placeholder="Ciudad o Barrio"
                 />
               </div>
@@ -250,7 +250,7 @@ function EditCustomerContent() {
         {/* Notas Internas */}
         <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6">
           <label className="block text-sm font-medium text-neutral-300 mb-1.5 flex items-center gap-2">
-            <AlignLeft className="w-4 h-4 text-violet-400" />
+            <AlignLeft className="w-4 h-4 text-red-400" />
             Notas Internas (Opcional)
           </label>
           <textarea
@@ -258,7 +258,7 @@ function EditCustomerContent() {
             value={formData.notes}
             onChange={handleChange}
             rows={3}
-            className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all resize-none placeholder:text-neutral-600"
+            className="w-full px-4 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all resize-none placeholder:text-neutral-600"
             placeholder="Preferencias del cliente, horarios de entrega, etc..."
           />
         </div>
@@ -274,7 +274,7 @@ function EditCustomerContent() {
           <button
             type="submit"
             disabled={isLoading || !formData.first_name}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

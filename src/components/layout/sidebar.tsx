@@ -70,7 +70,7 @@ export function Sidebar() {
             onClick={() => setOrgDropdownOpen(!orgDropdownOpen)}
             className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} p-2 rounded-2xl hover:bg-white/5 transition-colors`}
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/80 to-purple-600/80 backdrop-blur-md flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-lg shadow-violet-500/20 border border-white/20">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-500/80 to-red-600/80 backdrop-blur-md flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-lg shadow-red-500/20 border border-white/20">
               {currentOrg ? getInitials(currentOrg.name) : '?'}
             </div>
             {!isCollapsed && (
@@ -104,7 +104,7 @@ export function Sidebar() {
                       mem.organization_id === currentOrg?.id ? 'bg-white/10' : ''
                     }`}
                   >
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                       {mem.organization ? getInitials(mem.organization.name) : '?'}
                     </div>
                     <div className="text-left min-w-0">
@@ -119,7 +119,7 @@ export function Sidebar() {
                 ))}
                 <Link
                   href="/org/new"
-                  className="flex items-center gap-3 p-3 text-violet-400 hover:bg-white/5 transition-colors border-t border-white/10"
+                  className="flex items-center gap-3 p-3 text-red-400 hover:bg-white/5 transition-colors border-t border-white/10"
                   onClick={() => setOrgDropdownOpen(false)}
                 >
                   <Plus className="w-4 h-4" />

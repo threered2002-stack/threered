@@ -2,16 +2,18 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useOrg } from '@/providers/org-provider'
-import { getProducts, deleteProduct } from '@/modules/stock/actions/products'
+import { getProducts, deleteProduct, bulkUpdateProducts } from '@/modules/stock/actions/products'
 import { getWarehouses } from '@/modules/stock/actions/stock'
 import { formatMoney } from '@/lib/utils/money'
 import { ModuleGuard } from '@/components/layout/module-guard'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Plus, Search, Package, ArrowUpDown, Edit, Trash2 } from 'lucide-react'
+import { Plus, Search, Package, ArrowUpDown, Edit, Trash2, ListChecks, DollarSign, Power, X, Boxes } from 'lucide-react'
 import type { Product } from '@/lib/types'
 import { AdjustStockModal } from './adjust-stock-modal'
 import { EditProductModal } from './edit-product-modal'
+import { BulkActionsModal } from './bulk-actions-modal'
+import { getCategories } from '@/modules/stock/actions/products'
 
 export default function StockPage() {
   return (
@@ -34,14 +36,19 @@ function StockContent() {
   const [searchTerm, setSearchTerm] = useState('')
   const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [bulkActionConfig, setBulkActionConfig] = useState<'price' | 'category' | 'delete' | 'stock' | null>(null)
+  const [categories, setCategories] = useState<any[]>([])
 
   const loadData = async (orgId: string) => {
-    const [productsData, warehousesData] = await Promise.all([
+    const [productsData, warehousesData, categoriesData] = await Promise.all([
       getProducts(orgId),
-      getWarehouses(orgId)
+      getWarehouses(orgId),
+      getCategories(orgId)
     ])
     setProducts(productsData as any)
     setWarehouses(warehousesData)
+    setCategories(categoriesData)
     setIsLoading(false)
   }
 
@@ -51,10 +58,22 @@ function StockContent() {
     }
   }, [currentOrg])
 
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase()))
-  )
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase()))
+
+    if (warehouseId) {
+      const stockQty = p.stock?.reduce((sum, s) => {
+        if (s.warehouse_id === warehouseId) return sum + s.quantity
+        return sum
+      }, 0) || 0
+      
+      // Solo mostrar productos que realmente tengan stock en este depósito
+      return matchesSearch && stockQty > 0
+    }
+
+    return matchesSearch
+  })
 
   const selectedWarehouse = warehouses.find(w => w.id === warehouseId)
 
@@ -78,8 +97,35 @@ function StockContent() {
     }
   }
 
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredProducts.length && filteredProducts.length > 0) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(filteredProducts.map(p => p.id))
+    }
+  }
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    )
+  }
+
   return (
     <div className="space-y-6">
+      <BulkActionsModal
+        action={bulkActionConfig}
+        selectedIds={selectedIds}
+        products={products}
+        categories={categories}
+        warehouses={warehouses}
+        onClose={() => setBulkActionConfig(null)}
+        onSuccess={() => {
+          setBulkActionConfig(null)
+          setSelectedIds([])
+          if (currentOrg) loadData(currentOrg.id)
+        }}
+      />
       <AdjustStockModal 
         product={adjustingProduct} 
         warehouses={warehouses}
@@ -103,7 +149,7 @@ function StockContent() {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">
-            Inventario {selectedWarehouse && <span className="text-violet-400">({selectedWarehouse.name})</span>}
+            Inventario {selectedWarehouse && <span className="text-red-400">({selectedWarehouse.name})</span>}
           </h1>
           <p className="text-neutral-400 mt-1">
             {selectedWarehouse 
@@ -122,7 +168,7 @@ function StockContent() {
           )}
           <Link
             href="/stock/new"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-red-500/20"
           >
             <Plus className="w-5 h-5" />
             Nuevo Producto
@@ -152,8 +198,8 @@ function StockContent() {
         </div>
         <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-5">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 bg-violet-500/10 rounded-lg">
-              <Search className="w-5 h-5 text-violet-400" />
+            <div className="p-2.5 bg-red-500/10 rounded-lg">
+              <Search className="w-5 h-5 text-red-400" />
             </div>
             <p className="text-sm font-medium text-neutral-400">Valorización {selectedWarehouse ? 'Local' : 'Total'}</p>
           </div>
@@ -180,7 +226,7 @@ function StockContent() {
             placeholder="Buscar por nombre, SKU o código de barras..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
           />
         </div>
       </div>
@@ -191,6 +237,14 @@ function StockContent() {
           <table className="w-full text-left text-sm">
             <thead className="bg-neutral-900 text-neutral-400 border-b border-neutral-800">
               <tr>
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={filteredProducts.length > 0 && selectedIds.length === filteredProducts.length}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded border-neutral-700 bg-neutral-900 text-red-500 focus:ring-red-500/40 focus:ring-offset-neutral-900"
+                  />
+                </th>
                 <th className="px-4 py-3 font-medium">Producto</th>
                 <th className="px-4 py-3 font-medium">SKU</th>
                 <th className="px-4 py-3 font-medium">Categoría</th>
@@ -203,9 +257,9 @@ function StockContent() {
             <tbody className="divide-y divide-neutral-800/50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-neutral-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-neutral-500">
                     <div className="flex justify-center items-center gap-3">
-                      <svg className="animate-spin h-5 w-5 text-violet-500" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-5 w-5 text-red-500" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
@@ -215,7 +269,7 @@ function StockContent() {
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-neutral-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-neutral-500">
                     No se encontraron productos.
                   </td>
                 </tr>
@@ -225,18 +279,29 @@ function StockContent() {
                     if (warehouseId && s.warehouse_id !== warehouseId) return sum
                     return sum + s.quantity
                   }, 0) || 0
+                  
+                  const isSelected = selectedIds.includes(product.id)
+                  
                   return (
                     <tr
                       key={product.id}
-                      className="hover:bg-neutral-800/30 transition-colors group"
+                      className={`hover:bg-neutral-800/30 transition-colors group ${isSelected ? 'bg-red-500/5' : ''}`}
                     >
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelect(product.id)}
+                          className="w-4 h-4 rounded border-neutral-700 bg-neutral-900 text-red-500 focus:ring-red-500/40 focus:ring-offset-neutral-900"
+                        />
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-neutral-800 rounded-lg flex items-center justify-center shrink-0 border border-neutral-700/50">
-                            <Package className="w-5 h-5 text-neutral-400 group-hover:text-violet-400 transition-colors" />
+                            <Package className="w-5 h-5 text-neutral-400 group-hover:text-red-400 transition-colors" />
                           </div>
                           <div>
-                            <p className="font-medium text-white group-hover:text-violet-300 transition-colors">
+                            <p className="font-medium text-white group-hover:text-red-300 transition-colors">
                               {product.name}
                             </p>
                             {(() => {
@@ -287,7 +352,7 @@ function StockContent() {
                           </button>
                           <button
                             onClick={() => setEditingProduct(product)}
-                            className="p-1.5 text-neutral-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors"
+                            className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                             title="Editar producto"
                           >
                             <Edit className="w-4 h-4" />
@@ -309,6 +374,36 @@ function StockContent() {
           </table>
         </div>
       </div>
+
+      {/* Floating Action Bar for Selected Items */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center bg-[#111111] border border-neutral-800 rounded-xl shadow-2xl p-1.5 animate-in slide-in-from-bottom-10 fade-in duration-300">
+          <div className="text-white text-sm font-medium px-4 border-r border-neutral-800">
+            {selectedIds.length} seleccionados
+          </div>
+          
+          <div className="flex items-center gap-1 px-3 border-r border-neutral-800">
+            <button onClick={() => setBulkActionConfig('category')} className="flex items-center gap-2 px-3 py-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors font-medium">
+              <Package className="w-4 h-4" /> Categoría
+            </button>
+            <button onClick={() => setBulkActionConfig('price')} className="flex items-center gap-2 px-3 py-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors font-medium">
+              <DollarSign className="w-4 h-4" /> % Precio %
+            </button>
+            <button onClick={() => setBulkActionConfig('stock')} className="flex items-center gap-2 px-3 py-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors font-medium">
+              <Boxes className="w-4 h-4" /> Stock
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1 px-3">
+            <button onClick={() => setBulkActionConfig('delete')} className="flex items-center gap-2 px-3 py-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg text-sm transition-colors font-medium">
+              <Trash2 className="w-4 h-4" /> Eliminar
+            </button>
+            <button onClick={() => setSelectedIds([])} className="p-2 text-neutral-500 hover:text-white hover:bg-white/5 rounded-lg ml-1 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

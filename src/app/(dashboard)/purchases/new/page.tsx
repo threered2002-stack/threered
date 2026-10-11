@@ -24,12 +24,12 @@ export default function NewPurchaseOrderPage() {
       // We can use the existing actions or raw queries
       const [supps, prods, { data: whs }] = await Promise.all([
         getSuppliers(currentOrg.id),
-        getProducts(currentOrg.id, 1, 500, ''),
+        getProducts(currentOrg.id),
         supabase.from('warehouses').select('*').eq('organization_id', currentOrg.id)
       ])
 
       setSuppliers(supps)
-      setProducts(prods.data || [])
+      setProducts(prods || [])
       setWarehouses(whs || [])
       setIsLoading(false)
     }
@@ -40,7 +40,7 @@ export default function NewPurchaseOrderPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] animate-in fade-in">
-        <Loader2 className="w-8 h-8 text-violet-500 animate-spin mb-4" />
+        <Loader2 className="w-8 h-8 text-red-500 animate-spin mb-4" />
         <p className="text-neutral-500 text-sm">Cargando formulario...</p>
       </div>
     )

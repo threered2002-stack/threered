@@ -38,7 +38,7 @@ export default async function CashPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Banknote className="w-6 h-6 text-violet-400" />
+              <Banknote className="w-6 h-6 text-red-400" />
               Caja Diaria
             </h1>
             <p className="text-neutral-400 mt-1">Apertura, cierre y arqueo de turnos.</p>
@@ -59,9 +59,9 @@ export default async function CashPage() {
         </div>
 
         {openSession && (
-          <div className="bg-gradient-to-br from-violet-600/20 to-violet-900/10 border border-violet-500/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="bg-gradient-to-br from-red-600/20 to-red-900/10 border border-red-500/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-violet-500/20 rounded-full flex items-center justify-center">
+              <div className="w-14 h-14 bg-red-500/20 rounded-full flex items-center justify-center">
                 <div className="w-4 h-4 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.6)]"></div>
               </div>
               <div>
@@ -74,8 +74,8 @@ export default async function CashPage() {
             
             <div className="flex flex-wrap gap-6 items-end">
               <div>
-                <p className="text-sm text-violet-300/70 mb-1">Monto de Apertura</p>
-                <p className="text-2xl font-bold text-violet-100">{formatCurrency(openSession.opening_amount_cents)}</p>
+                <p className="text-sm text-red-300/70 mb-1">Monto de Apertura</p>
+                <p className="text-2xl font-bold text-red-100">{formatCurrency(openSession.opening_amount_cents)}</p>
               </div>
             </div>
           </div>

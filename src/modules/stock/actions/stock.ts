@@ -189,3 +189,40 @@ export async function updateWarehouse(id: string, orgId: string, input: {
   revalidatePath('/stock/warehouses')
   return { success: true, data }
 }
+
+export async function bulkCreateStockMovements(orgId: string, movements: {
+  product_id: string;
+  warehouse_id: string;
+  movement_type: string;
+  quantity: number;
+  notes?: string;
+}[]) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'No autorizado' }
+
+  // Batch insert movements
+  const inserts = movements.map(m => ({
+    organization_id: orgId,
+    product_id: m.product_id,
+    warehouse_id: m.warehouse_id,
+    movement_type: m.movement_type,
+    quantity: m.quantity,
+    reference_type: 'manual',
+    notes: m.notes,
+    created_by: user.id
+  }))
+
+  const { error } = await supabase
+    .from('stock_movements')
+    .insert(inserts)
+
+  if (error) {
+    console.error('Error in bulk stock movements:', error)
+    return { error: 'Error al registrar los movimientos de stock masivos.' }
+  }
+
+  revalidatePath('/stock')
+  return { success: true, count: inserts.length }
+}

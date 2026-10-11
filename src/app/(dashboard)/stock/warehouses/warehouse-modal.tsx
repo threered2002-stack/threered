@@ -90,8 +90,8 @@ export function WarehouseModal({ warehouse, isOpen, onClose }: WarehouseModalPro
       <div className="relative bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
         <div className="flex items-center justify-between p-5 border-b border-neutral-800">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center border border-violet-500/20">
-              <Warehouse className="w-5 h-5 text-violet-400" />
+            <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center border border-red-500/20">
+              <Warehouse className="w-5 h-5 text-red-400" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">
@@ -126,7 +126,7 @@ export function WarehouseModal({ warehouse, isOpen, onClose }: WarehouseModalPro
               value={formData.name}
               onChange={handleChange}
               placeholder="Ej: Salón Principal"
-              className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-violet-500/40 transition-all text-sm"
+              className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-red-500/40 transition-all text-sm"
             />
           </div>
 
@@ -138,7 +138,7 @@ export function WarehouseModal({ warehouse, isOpen, onClose }: WarehouseModalPro
               value={formData.address}
               onChange={handleChange}
               placeholder="Ej: Av. Siempreviva 742"
-              className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-violet-500/40 transition-all text-sm"
+              className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-red-500/40 transition-all text-sm"
             />
           </div>
 
@@ -152,10 +152,10 @@ export function WarehouseModal({ warehouse, isOpen, onClose }: WarehouseModalPro
                   onChange={handleChange}
                   className="peer sr-only"
                 />
-                <div className="w-10 h-5 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-violet-500"></div>
+                <div className="w-10 h-5 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500"></div>
               </div>
               <div>
-                <p className="text-sm font-medium text-white group-hover:text-violet-300 transition-colors">Depósito Principal</p>
+                <p className="text-sm font-medium text-white group-hover:text-red-300 transition-colors">Depósito Principal</p>
                 <p className="text-xs text-neutral-500">Se usará por defecto para las ventas del POS.</p>
               </div>
             </label>
@@ -191,7 +191,7 @@ export function WarehouseModal({ warehouse, isOpen, onClose }: WarehouseModalPro
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-violet-500/20 disabled:opacity-50 flex items-center gap-2 text-sm"
+              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-red-500/20 disabled:opacity-50 flex items-center gap-2 text-sm"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               <Save className="w-4 h-4" />

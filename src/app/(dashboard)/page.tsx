@@ -35,7 +35,7 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <svg className="animate-spin h-8 w-8 text-violet-500" viewBox="0 0 24 24">
+        <svg className="animate-spin h-8 w-8 text-red-500" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
         </svg>
@@ -47,8 +47,8 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh]">
         <div className="text-center max-w-md bg-neutral-900/50 border border-neutral-800 p-10 rounded-[2rem]">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-violet-500/10 mb-6">
-            <Plus className="w-8 h-8 text-violet-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/10 mb-6">
+            <Plus className="w-8 h-8 text-red-400" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-3">
             ¡Bienvenido a PADRE!
@@ -58,7 +58,7 @@ export default function DashboardPage() {
           </p>
           <Link
             href="/org/new"
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-full transition-all"
+            className="inline-flex items-center gap-2 px-8 py-3.5 bg-red-600 hover:bg-red-500 text-white font-medium rounded-full transition-all"
           >
             <Plus className="w-5 h-5" />
             Crear Organización
@@ -77,7 +77,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col justify-end pb-2">
         <h1 className="text-3xl font-bold text-white tracking-tight">
-          {greeting}, <span className="text-violet-400">{profile?.full_name?.split(' ')[0] ?? 'Usuario'}</span>
+          {greeting}, <span className="text-red-400">{profile?.full_name?.split(' ')[0] ?? 'Usuario'}</span>
         </h1>
         <p className="text-neutral-400 mt-1">
           Resumen general de <strong>{currentOrg.name}</strong>
@@ -139,7 +139,7 @@ export default function DashboardPage() {
       <div className="bg-neutral-900/40 border border-neutral-800/80 rounded-[2rem] p-8">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Activity className="w-5 h-5 text-violet-400" />
+            <Activity className="w-5 h-5 text-red-400" />
             Accesos Rápidos
           </h2>
         </div>
@@ -158,8 +158,8 @@ export default function DashboardPage() {
                   href={(navConfig as any)?.defaultPath ?? navConfig?.basePath ?? '/'}
                   className="group bg-neutral-900/50 hover:bg-neutral-800 rounded-2xl p-4 border border-neutral-800/50 hover:border-neutral-700 transition-all duration-300 flex flex-col items-center text-center"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-neutral-800 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:bg-violet-500/20 transition-all">
-                    <Icon className="w-6 h-6 text-neutral-400 group-hover:text-violet-400 transition-colors" />
+                  <div className="w-12 h-12 rounded-xl bg-neutral-800 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:bg-red-500/20 transition-all">
+                    <Icon className="w-6 h-6 text-neutral-400 group-hover:text-red-400 transition-colors" />
                   </div>
                   <h3 className="font-medium text-neutral-300 group-hover:text-white mb-1 text-sm">
                     {mod.name}

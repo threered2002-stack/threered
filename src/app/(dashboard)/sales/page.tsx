@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { History, Download, Filter, Search, Receipt } from 'lucide-react'
 import { ModuleGuard } from '@/components/layout/module-guard'
-import { SALE_STATUSES } from '@/lib/constants'
+import { SALE_STATUSES } from '@/lib/constants/index'
 
 export default async function SalesHistoryPage() {
   const supabase = await createClient()
@@ -48,7 +48,7 @@ export default async function SalesHistoryPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <History className="w-6 h-6 text-violet-400" />
+              <History className="w-6 h-6 text-red-400" />
               Historial de Ventas
             </h1>
             <p className="text-neutral-400 mt-1">Registro completo de tickets y facturación.</p>
@@ -68,7 +68,7 @@ export default async function SalesHistoryPage() {
             <input
               type="text"
               placeholder="Buscar por n° de ticket, cliente o vendedor..."
-              className="w-full pl-9 pr-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all placeholder:text-neutral-600"
+              className="w-full pl-9 pr-4 py-2 bg-neutral-900/50 border border-neutral-800 rounded-xl text-white focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all placeholder:text-neutral-600"
             />
           </div>
           <button className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-neutral-900/50 hover:bg-neutral-800 text-neutral-300 font-medium rounded-xl border border-neutral-800 transition-colors">
@@ -100,7 +100,9 @@ export default async function SalesHistoryPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-white font-medium">{sale.customer?.full_name || 'Consumidor Final'}</p>
+                      <p className="text-white font-medium">
+                        {sale.customer ? `${sale.customer.first_name} ${sale.customer.last_name || ''}`.trim() : 'Consumidor Final'}
+                      </p>
                     </td>
                     <td className="px-6 py-4 text-neutral-300 whitespace-nowrap">
                       {new Date(sale.created_at).toLocaleDateString('es-AR')}

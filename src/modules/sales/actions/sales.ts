@@ -88,6 +88,7 @@ export async function createSale(orgId: string, input: {
   revalidatePath('/stock')
   revalidatePath('/customers')
   revalidatePath('/finance/payables-receivables')
+  revalidatePath('/reports')
   
   return { success: true, data }
 }
@@ -99,7 +100,7 @@ export async function getSales(orgId: string, limit = 50) {
     .from('sales')
     .select(`
       *,
-      customer:customers(first_name, last_name, full_name)
+      customer:customers(first_name, last_name)
     `)
     .eq('organization_id', orgId)
     .order('created_at', { ascending: false })

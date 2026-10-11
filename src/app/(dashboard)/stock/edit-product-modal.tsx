@@ -129,7 +129,7 @@ export function EditProductModal({ product, isOpen, onClose }: EditProductModalP
         <div className="overflow-y-auto p-6">
           {isFetching ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+              <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
             </div>
           ) : (
             <form id="edit-product-form" onSubmit={handleSubmit} className="space-y-6">
@@ -143,7 +143,7 @@ export function EditProductModal({ product, isOpen, onClose }: EditProductModalP
                 {/* Información Principal */}
                 <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-5 space-y-4">
                   <div className="flex items-center gap-2 border-b border-neutral-800 pb-3 mb-3">
-                    <Package className="w-5 h-5 text-violet-400" />
+                    <Package className="w-5 h-5 text-red-400" />
                     <h3 className="text-base font-semibold text-white">Información Principal</h3>
                   </div>
 
@@ -156,7 +156,7 @@ export function EditProductModal({ product, isOpen, onClose }: EditProductModalP
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-violet-500/40 transition-all text-sm"
+                        className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-red-500/40 transition-all text-sm"
                       />
                     </div>
 
@@ -168,7 +168,7 @@ export function EditProductModal({ product, isOpen, onClose }: EditProductModalP
                           name="sku"
                           value={formData.sku}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-violet-500/40 transition-all font-mono text-sm"
+                          className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-red-500/40 transition-all font-mono text-sm"
                         />
                       </div>
                       <div>
@@ -178,7 +178,7 @@ export function EditProductModal({ product, isOpen, onClose }: EditProductModalP
                           name="barcode"
                           value={formData.barcode}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-violet-500/40 transition-all font-mono text-sm"
+                          className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-red-500/40 transition-all font-mono text-sm"
                         />
                       </div>
                     </div>
@@ -190,7 +190,7 @@ export function EditProductModal({ product, isOpen, onClose }: EditProductModalP
                           name="category_id"
                           value={formData.category_id}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-violet-500/40 transition-all text-sm"
+                          className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-red-500/40 transition-all text-sm"
                         >
                           <option value="">Sin categoría</option>
                           {categories.map((cat) => (
@@ -204,7 +204,7 @@ export function EditProductModal({ product, isOpen, onClose }: EditProductModalP
                           name="unit"
                           value={formData.unit}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-violet-500/40 transition-all text-sm"
+                          className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-red-500/40 transition-all text-sm"
                         >
                           <option value="unidades">Unidades</option>
                           <option value="cajas">Cajas</option>
@@ -236,7 +236,7 @@ export function EditProductModal({ product, isOpen, onClose }: EditProductModalP
                             step="0.01"
                             value={formData.cost_price}
                             onChange={handleChange}
-                            className="w-full pl-8 pr-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-violet-500/40 transition-all text-sm"
+                            className="w-full pl-8 pr-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-red-500/40 transition-all text-sm"
                           />
                         </div>
                       </div>
@@ -266,7 +266,7 @@ export function EditProductModal({ product, isOpen, onClose }: EditProductModalP
                         min="0"
                         value={formData.min_stock}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-violet-500/40 transition-all text-sm"
+                        className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:ring-2 focus:ring-red-500/40 transition-all text-sm"
                       />
                     </div>
                   </div>
@@ -323,7 +323,7 @@ export function EditProductModal({ product, isOpen, onClose }: EditProductModalP
             type="submit"
             form="edit-product-form"
             disabled={isLoading || error === 'Producto no encontrado'}
-            className="inline-flex items-center gap-2 px-5 py-2 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20 disabled:opacity-50 text-sm"
+            className="inline-flex items-center gap-2 px-5 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-red-500/20 disabled:opacity-50 text-sm"
           >
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Guardar Cambios

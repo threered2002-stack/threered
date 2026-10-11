@@ -41,6 +41,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const [currentOrgId, setCurrentOrgId] = useState<string | null>(null)
   const [activeModules, setActiveModules] = useState<OrganizationModule[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isModulesLoading, setIsModulesLoading] = useState(true)
   const supabase = createClient()
 
   // Cargar organizaciones
@@ -49,6 +50,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         setIsLoading(false)
+        setIsModulesLoading(false)
         return
       }
 
@@ -73,6 +75,8 @@ export function OrgProvider({ children }: { children: ReactNode }) {
         const defaultOrgId = orgExists ? savedOrgId : data[0].organization_id
 
         setCurrentOrgId(defaultOrgId)
+      } else {
+        setIsModulesLoading(false)
       }
 
       setIsLoading(false)
@@ -83,6 +87,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
 
   const refreshModules = useCallback(async () => {
     if (!currentOrgId) return
+    setIsModulesLoading(true)
     const { data } = await supabase
       .from('organization_modules')
       .select(`
@@ -95,6 +100,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     if (data) {
       setActiveModules(data as OrganizationModule[])
     }
+    setIsModulesLoading(false)
   }, [currentOrgId, supabase])
 
   // Cargar módulos cuando cambia la org
@@ -104,7 +110,9 @@ export function OrgProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(ORG_STORAGE_KEY, currentOrgId)
     }
 
-    refreshModules()
+    if (currentOrgId) {
+      refreshModules()
+    }
   }, [currentOrgId, refreshModules])
 
   const currentMembership = organizations.find(
@@ -121,6 +129,9 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     [activeModules]
   )
 
+  // Overall loading is true if either organizations or modules are still loading
+  const isFullyLoading = isLoading || isModulesLoading
+
   return (
     <OrgContext.Provider
       value={{
@@ -131,7 +142,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
         isModuleActive,
         setCurrentOrgId,
         refreshModules,
-        isLoading,
+        isLoading: isFullyLoading,
       }}
     >
       {children}

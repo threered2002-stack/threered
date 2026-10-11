@@ -128,3 +128,34 @@ export async function deleteProduct(id: string, orgId: string) {
   revalidatePath('/stock')
   return { data }
 }
+
+export async function bulkUpdateProducts(orgId: string, updates: { id: string, data: any }[]) {
+  const supabase = await createClient()
+
+  const results = []
+  const errors = []
+
+  // Update sequentially for MVP (Supabase doesn't easily support bulk update with different values per row without an RPC)
+  for (const update of updates) {
+    const { error } = await supabase
+      .from('products')
+      .update(update.data)
+      .eq('id', update.id)
+      .eq('organization_id', orgId)
+      
+    if (error) {
+      errors.push({ id: update.id, error })
+    } else {
+      results.push(update.id)
+    }
+  }
+
+  revalidatePath('/stock')
+  
+  if (errors.length > 0) {
+    console.error('Errors in bulk update:', errors)
+    return { error: 'Ocurrieron errores al actualizar algunos productos.', details: errors }
+  }
+  
+  return { success: true, count: results.length }
+}

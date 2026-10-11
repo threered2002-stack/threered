@@ -38,7 +38,7 @@ export default async function TransactionsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <ArrowLeftRight className="w-6 h-6 text-violet-400" />
+              <ArrowLeftRight className="w-6 h-6 text-red-400" />
               Transacciones
             </h1>
             <p className="text-neutral-400 mt-1">Historial completo de ingresos y egresos.</p>
@@ -50,7 +50,7 @@ export default async function TransactionsPage() {
             </button>
             <Link
               href="/finance/new"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-red-500/20"
             >
               <Plus className="w-4 h-4" />
               Nuevo
@@ -60,7 +60,7 @@ export default async function TransactionsPage() {
 
         {/* Filters placeholder */}
         <div className="flex gap-2 pb-2 overflow-x-auto">
-          <button className="px-4 py-1.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20 text-sm font-medium whitespace-nowrap">
+          <button className="px-4 py-1.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-sm font-medium whitespace-nowrap">
             Todos
           </button>
           <button className="px-4 py-1.5 rounded-full bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-neutral-300 text-sm font-medium whitespace-nowrap">

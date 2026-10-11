@@ -86,7 +86,7 @@ export default async function StockAlertsPage() {
                     <td className="px-6 py-4 text-center">
                       <Link 
                         href={`/purchases/new?product=${alert.product_id}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-violet-400 hover:text-white bg-violet-500/10 hover:bg-violet-500 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 rounded-lg transition-colors"
                       >
                         Comprar
                         <ArrowRight className="w-3 h-3" />

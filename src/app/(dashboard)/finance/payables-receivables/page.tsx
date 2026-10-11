@@ -58,7 +58,7 @@ export default async function PayablesReceivablesPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <FileText className="w-6 h-6 text-violet-400" />
+              <FileText className="w-6 h-6 text-red-400" />
               Por Pagar y Cobrar
             </h1>
             <p className="text-neutral-400 mt-1">Gestión de deudas a proveedores y créditos de clientes.</p>
@@ -66,7 +66,7 @@ export default async function PayablesReceivablesPage() {
           
           <Link 
             href="/finance/payables-receivables/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-violet-500/20"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-red-500/20"
           >
             <Plus className="w-4 h-4" />
             Nueva Deuda/Cobro
@@ -99,7 +99,9 @@ export default async function PayablesReceivablesPage() {
                     {receivables.map((ar) => (
                       <tr key={ar.id} className="hover:bg-neutral-800/20 transition-colors">
                         <td className="px-4 py-4">
-                          <p className="text-white font-medium">{ar.customer?.name || 'Cliente sin nombre'}</p>
+                          <p className="text-white font-medium">
+                            {ar.customer ? `${ar.customer.first_name} ${ar.customer.last_name || ''}`.trim() : 'Cliente sin nombre'}
+                          </p>
                           {ar.notes && <p className="text-xs text-neutral-500 mt-0.5">{ar.notes}</p>}
                         </td>
                         <td className="px-4 py-4">

@@ -26,7 +26,10 @@ export function AdjustStockModal({ product, warehouses, preselectedWarehouseId, 
   // Reset form when product changes
   if (!isOpen || !product) return null
 
-  const stockQty = product.stock?.reduce((sum, s) => sum + s.quantity, 0) || 0
+  const stockQty = product.stock?.reduce((sum, s) => {
+    if (formData.warehouse_id && s.warehouse_id !== formData.warehouse_id) return sum
+    return sum + s.quantity
+  }, 0) || 0
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,7 +74,7 @@ export function AdjustStockModal({ product, warehouses, preselectedWarehouseId, 
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Product Info */}
-          <div className="p-4 rounded-xl border bg-violet-500/10 border-violet-500/30 text-white flex items-center justify-between">
+          <div className="p-4 rounded-xl border bg-red-500/10 border-red-500/30 text-white flex items-center justify-between">
             <div>
               <div className="font-bold text-lg">{product.name}</div>
               <div className="text-sm text-neutral-400 mt-1 flex items-center gap-4">
@@ -79,7 +82,7 @@ export function AdjustStockModal({ product, warehouses, preselectedWarehouseId, 
                 <span>Stock Actual: <strong className="text-white">{stockQty}</strong></span>
               </div>
             </div>
-            <Package className="w-8 h-8 text-violet-400/50" />
+            <Package className="w-8 h-8 text-red-400/50" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -91,7 +94,7 @@ export function AdjustStockModal({ product, warehouses, preselectedWarehouseId, 
                 value={formData.warehouse_id}
                 onChange={(e) => setFormData(prev => ({ ...prev, warehouse_id: e.target.value }))}
                 required
-                className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white appearance-none focus:ring-2 focus:ring-violet-500/40 transition-all text-sm"
+                className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white appearance-none focus:ring-2 focus:ring-red-500/40 transition-all text-sm"
               >
                 {warehouses.map(w => (
                   <option key={w.id} value={w.id}>{w.name}</option>
@@ -107,12 +110,11 @@ export function AdjustStockModal({ product, warehouses, preselectedWarehouseId, 
                 value={formData.movement_type}
                 onChange={(e) => setFormData(prev => ({ ...prev, movement_type: e.target.value }))}
                 required
-                className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white appearance-none focus:ring-2 focus:ring-violet-500/40 transition-all text-sm"
+                className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white appearance-none focus:ring-2 focus:ring-red-500/40 transition-all text-sm"
               >
                 <option value="adjustment">Ajuste (Positivo/Negativo)</option>
                 <option value="purchase_in">Entrada por Compra</option>
-                <option value="return_in">Entrada por Devol.</option>
-                <option value="waste_out">Salida por Merma</option>
+                <option value="loss">Salida por Merma/Rotura</option>
                 <option value="sale_out">Salida Manual</option>
               </select>
             </div>
@@ -128,7 +130,7 @@ export function AdjustStockModal({ product, warehouses, preselectedWarehouseId, 
               value={formData.quantity}
               onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
               placeholder="Ej: 10 o -5"
-              className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-violet-500/40 transition-all"
+              className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-red-500/40 transition-all"
             />
           </div>
 
@@ -141,7 +143,7 @@ export function AdjustStockModal({ product, warehouses, preselectedWarehouseId, 
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               rows={2}
               placeholder="Motivo del ajuste..."
-              className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-violet-500/40 transition-all resize-none text-sm"
+              className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-red-500/40 transition-all resize-none text-sm"
             />
           </div>
 
@@ -156,7 +158,7 @@ export function AdjustStockModal({ product, warehouses, preselectedWarehouseId, 
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-violet-500/20 disabled:opacity-50 flex items-center gap-2 text-sm"
+              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-red-500/20 disabled:opacity-50 flex items-center gap-2 text-sm"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               <Save className="w-4 h-4" />

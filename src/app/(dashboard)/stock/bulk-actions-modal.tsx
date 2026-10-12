@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useOrg } from '@/providers/org-provider'
+import { useToast } from '@/providers/toast-provider'
 import { bulkUpdateProducts } from '@/modules/stock/actions/products'
 import { bulkCreateStockMovements } from '@/modules/stock/actions/stock'
-import { X, Save, Loader2, AlertTriangle, Boxes } from 'lucide-react'
+import { X, Save, Loader2, AlertTriangle, Boxes, AlertCircle } from 'lucide-react'
 
 interface BulkActionsModalProps {
   action: 'price' | 'category' | 'delete' | 'stock' | null
@@ -16,7 +17,9 @@ interface BulkActionsModalProps {
 
 export function BulkActionsModal({ action, selectedIds, products, categories = [], warehouses = [], onClose, onSuccess }: BulkActionsModalProps) {
   const { currentOrg } = useOrg()
+  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [percentage, setPercentage] = useState('')
   const [targetPrices, setTargetPrices] = useState<'both' | 'cost' | 'sale'>('both')
   const [selectedCategory, setSelectedCategory] = useState('')
@@ -31,6 +34,7 @@ export function BulkActionsModal({ action, selectedIds, products, categories = [
   const handlePriceUpdate = async () => {
     if (!currentOrg || !percentage) return
     setIsLoading(true)
+    setError(null)
     
     const pct = parseFloat(percentage) / 100
     const multiplier = 1 + pct
@@ -52,13 +56,16 @@ export function BulkActionsModal({ action, selectedIds, products, categories = [
     const res = await bulkUpdateProducts(currentOrg.id, updates)
     setIsLoading(false)
     
-    if (res.error) alert(res.error)
-    else onSuccess()
+    if (res.error) {
+      setError(res.error)
+      toast.error(res.error, 'Error al actualizar precios')
+    } else onSuccess()
   }
 
   const handleCategoryUpdate = async () => {
     if (!currentOrg || !selectedCategory) return
     setIsLoading(true)
+    setError(null)
     
     const updates = selectedIds.map(id => ({
       id,
@@ -68,13 +75,16 @@ export function BulkActionsModal({ action, selectedIds, products, categories = [
     const res = await bulkUpdateProducts(currentOrg.id, updates)
     setIsLoading(false)
     
-    if (res.error) alert(res.error)
-    else onSuccess()
+    if (res.error) {
+      setError(res.error)
+      toast.error(res.error, 'Error al cambiar categoría')
+    } else onSuccess()
   }
 
   const handleDelete = async () => {
     if (!currentOrg) return
     setIsLoading(true)
+    setError(null)
     
     // Soft delete can just be a bulk update setting deleted_at
     const updates = selectedIds.map(id => ({
@@ -85,18 +95,23 @@ export function BulkActionsModal({ action, selectedIds, products, categories = [
     const res = await bulkUpdateProducts(currentOrg.id, updates)
     setIsLoading(false)
     
-    if (res.error) alert(res.error)
-    else onSuccess()
+    if (res.error) {
+      setError(res.error)
+      toast.error(res.error, 'Error al eliminar productos')
+    } else onSuccess()
   }
 
   const handleStockUpdate = async () => {
     if (!currentOrg || !stockWarehouse || !stockQuantity) return
     setIsLoading(true)
+    setError(null)
 
     const quantityNum = parseFloat(stockQuantity)
     if (isNaN(quantityNum) || quantityNum === 0) {
       setIsLoading(false)
-      return alert("Cantidad inválida")
+      setError('Cantidad inválida')
+      toast.error('La cantidad ingresada no es válida', 'Cantidad inválida')
+      return
     }
 
     const movements = selectedIds.map(id => ({
@@ -110,8 +125,10 @@ export function BulkActionsModal({ action, selectedIds, products, categories = [
     const res = await bulkCreateStockMovements(currentOrg.id, movements)
     setIsLoading(false)
 
-    if (res.error) alert(res.error)
-    else onSuccess()
+    if (res.error) {
+      setError(res.error)
+      toast.error(res.error, 'Error al actualizar stock')
+    } else onSuccess()
   }
 
   return (
@@ -132,6 +149,13 @@ export function BulkActionsModal({ action, selectedIds, products, categories = [
         </div>
 
         <div className="p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-rose-500/10 rounded-xl border border-rose-500/30 text-rose-400 text-sm flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
           <div className="mb-6 p-3 bg-neutral-800/50 rounded-xl border border-neutral-700/50">
             <p className="text-sm text-neutral-300">
               Se aplicará el cambio a <strong className="text-white">{selectedIds.length}</strong> productos seleccionados.

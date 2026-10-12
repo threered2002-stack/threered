@@ -1,4 +1,4 @@
-import { getAccounts, getTransactions, getFinanceSummary } from '@/modules/finance/actions/finance'
+import { getAccounts, getTransactions, getFinanceSummary, syncFinanceData } from '@/modules/finance/actions/finance'
 import { getUserMembership } from '@/modules/core/actions/organizations'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Plus, ArrowUpRight, ArrowDownRight, Wallet, Landmark, CreditCard, Activity, PieChart } from 'lucide-react'
 import { ModuleGuard } from '@/components/layout/module-guard'
 import { FinancePieChart } from '@/components/finance/finance-charts'
+import { SyncFinanceButton } from '@/components/finance/sync-button'
 
 export default async function FinancePage() {
   const supabase = await createClient()
@@ -24,6 +25,9 @@ export default async function FinancePage() {
   if (!membership) redirect('/org/new')
 
   const orgId = membership.organization_id
+
+  // Sincronizar automáticamente ventas y órdenes existentes con Finanzas
+  await syncFinanceData(orgId)
 
   const [accounts, summary, transactions] = await Promise.all([
     getAccounts(orgId),
@@ -61,13 +65,16 @@ export default async function FinancePage() {
             <h1 className="text-2xl font-bold text-white">Finanzas</h1>
             <p className="text-neutral-400 mt-1">Caja, ingresos, egresos y cuentas.</p>
           </div>
-          <Link
-            href="/finance/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-red-500/20 w-fit"
-          >
-            <Plus className="w-5 h-5" />
-            Nuevo Movimiento
-          </Link>
+          <div className="flex items-center gap-3">
+            <SyncFinanceButton orgId={orgId} />
+            <Link
+              href="/finance/new"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-red-500/20 w-fit"
+            >
+              <Plus className="w-4 h-4" />
+              Nuevo Movimiento
+            </Link>
+          </div>
         </div>
 
         {/* Global Summary Cards */}

@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, Phone, ShoppingCart, ChevronDown, AlignLeft, Trash2 } from 'lucide-react'
+import { Mail, Phone, ShoppingCart, ChevronDown, AlignLeft, Trash2, Loader2, AlertCircle } from 'lucide-react'
 import { deleteCustomer } from '@/modules/customers/actions/customers'
 import { useOrg } from '@/providers/org-provider'
+import { useToast } from '@/providers/toast-provider'
 
 interface CustomerRowProps {
   customer: any
@@ -14,21 +15,30 @@ export function CustomerRow({ customer: c }: CustomerRowProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const router = useRouter()
   const { currentOrg } = useOrg()
+  const { toast } = useToast()
   const [isDeleting, startTransition] = useTransition()
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleOpenDelete = (e: React.MouseEvent) => {
     e.stopPropagation()
+    setDeleteError(null)
+    setShowConfirmDelete(true)
+  }
+
+  const handleConfirmDelete = () => {
     if (!currentOrg) return
-    if (confirm('¿Estás seguro que querés eliminar este cliente?')) {
-      startTransition(async () => {
-        const { error } = await deleteCustomer(c.id, currentOrg.id)
-        if (error) {
-          alert(error)
-        } else {
-          router.refresh()
-        }
-      })
-    }
+    startTransition(async () => {
+      const { error } = await deleteCustomer(c.id, currentOrg.id)
+      if (error) {
+        setDeleteError(error)
+        toast.error(error, 'Error al eliminar cliente')
+      } else {
+        setShowConfirmDelete(false)
+        toast.success(`El cliente "${c.full_name}" fue dado de baja correctamente.`, 'Cliente eliminado')
+        router.refresh()
+      }
+    })
   }
 
   const formatCurrency = (cents: number) => {
@@ -104,9 +114,8 @@ export function CustomerRow({ customer: c }: CustomerRowProps) {
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
               <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                onClick={handleOpenDelete}
+                className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                 title="Eliminar cliente"
               >
                 <Trash2 className="w-4 h-4" />
@@ -132,6 +141,73 @@ export function CustomerRow({ customer: c }: CustomerRowProps) {
             </div>
           </td>
         </tr>
+      )}
+
+      {showConfirmDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150"
+          onClick={(e) => {
+            e.stopPropagation()
+            if (!isDeleting) setShowConfirmDelete(false)
+          }}
+        >
+          <div
+            className="relative w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-white">¿Eliminar cliente?</h3>
+                <p className="text-sm text-neutral-400 mt-1">
+                  ¿Estás seguro de que deseas eliminar a{' '}
+                  <strong className="text-white font-semibold">{c.full_name}</strong>?
+                </p>
+                <p className="text-xs text-neutral-500 mt-2">
+                  Esta acción dará de baja al cliente del sistema.
+                </p>
+              </div>
+            </div>
+
+            {deleteError && (
+              <div className="mt-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowConfirmDelete(false)}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-xl text-sm font-medium text-neutral-300 hover:text-white bg-neutral-800/80 hover:bg-neutral-800 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white bg-rose-600 hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/20 cursor-pointer disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Eliminar
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )

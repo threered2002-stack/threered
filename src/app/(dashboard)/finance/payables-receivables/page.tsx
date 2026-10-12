@@ -1,9 +1,10 @@
-import { getAccountsPayable, getAccountsReceivable } from '@/modules/finance/actions/finance'
+import { getAccountsPayable, getAccountsReceivable, syncFinanceData } from '@/modules/finance/actions/finance'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { FileText, ArrowUpRight, ArrowDownRight, Clock, Plus } from 'lucide-react'
 import { ModuleGuard } from '@/components/layout/module-guard'
+import { SettleReceivableButton, SettlePayableButton } from '@/components/finance/settle-actions'
 
 export default async function PayablesReceivablesPage() {
   const supabase = await createClient()
@@ -19,6 +20,9 @@ export default async function PayablesReceivablesPage() {
     .single()
 
   if (!membership) redirect('/org/new')
+
+  // Asegurar sincronización con órdenes y ventas
+  await syncFinanceData(membership.organization_id)
 
   const [payables, receivables] = await Promise.all([
     getAccountsPayable(membership.organization_id),
@@ -93,6 +97,7 @@ export default async function PayablesReceivablesPage() {
                       <th className="px-4 py-3 font-medium">Vencimiento</th>
                       <th className="px-4 py-3 font-medium">Estado</th>
                       <th className="px-4 py-3 font-medium text-right">Monto</th>
+                      <th className="px-4 py-3 font-medium text-right">Acción</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-800/50">
@@ -121,11 +126,18 @@ export default async function PayablesReceivablesPage() {
                             <p className="text-xs text-emerald-400 mt-0.5">Cobrado: {formatCurrency(ar.received_cents)}</p>
                           )}
                         </td>
+                        <td className="px-4 py-4 text-right">
+                          <SettleReceivableButton 
+                            orgId={membership.organization_id} 
+                            receivableId={ar.id} 
+                            status={ar.status} 
+                          />
+                        </td>
                       </tr>
                     ))}
                     {receivables.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="px-4 py-12 text-center text-neutral-500">
+                        <td colSpan={5} className="px-4 py-12 text-center text-neutral-500">
                           No tenés cuentas por cobrar pendientes.
                         </td>
                       </tr>
@@ -154,6 +166,7 @@ export default async function PayablesReceivablesPage() {
                       <th className="px-4 py-3 font-medium">Vencimiento</th>
                       <th className="px-4 py-3 font-medium">Estado</th>
                       <th className="px-4 py-3 font-medium text-right">Monto</th>
+                      <th className="px-4 py-3 font-medium text-right">Acción</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-800/50">
@@ -180,11 +193,18 @@ export default async function PayablesReceivablesPage() {
                             <p className="text-xs text-emerald-400 mt-0.5">Pagado: {formatCurrency(ap.paid_cents)}</p>
                           )}
                         </td>
+                        <td className="px-4 py-4 text-right">
+                          <SettlePayableButton 
+                            orgId={membership.organization_id} 
+                            payableId={ap.id} 
+                            status={ap.status} 
+                          />
+                        </td>
                       </tr>
                     ))}
                     {payables.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="px-4 py-12 text-center text-neutral-500">
+                        <td colSpan={5} className="px-4 py-12 text-center text-neutral-500">
                           No tenés cuentas por pagar pendientes.
                         </td>
                       </tr>

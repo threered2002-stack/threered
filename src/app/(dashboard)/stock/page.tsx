@@ -8,12 +8,13 @@ import { formatMoney } from '@/lib/utils/money'
 import { ModuleGuard } from '@/components/layout/module-guard'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Plus, Search, Package, ArrowUpDown, Edit, Trash2, ListChecks, DollarSign, Power, X, Boxes } from 'lucide-react'
+import { Plus, Search, Package, ArrowUpDown, Edit, Trash2, ListChecks, DollarSign, Power, X, Boxes, Loader2, AlertCircle } from 'lucide-react'
 import type { Product } from '@/lib/types'
 import { AdjustStockModal } from './adjust-stock-modal'
 import { EditProductModal } from './edit-product-modal'
 import { BulkActionsModal } from './bulk-actions-modal'
 import { getCategories } from '@/modules/stock/actions/products'
+import { useToast } from '@/providers/toast-provider'
 
 export default function StockPage() {
   return (
@@ -27,6 +28,7 @@ export default function StockPage() {
 
 function StockContent() {
   const { currentOrg } = useOrg()
+  const { toast } = useToast()
   const searchParams = useSearchParams()
   const warehouseId = searchParams.get('warehouse_id')
   
@@ -36,6 +38,9 @@ function StockContent() {
   const [searchTerm, setSearchTerm] = useState('')
   const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null)
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false)
+  const [deleteProductError, setDeleteProductError] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [bulkActionConfig, setBulkActionConfig] = useState<'price' | 'category' | 'delete' | 'stock' | null>(null)
   const [categories, setCategories] = useState<any[]>([])
@@ -85,15 +90,22 @@ function StockContent() {
     return acc + stockQty
   }, 0)
 
-  const handleDelete = async (productId: string) => {
-    if (!currentOrg) return
-    if (!confirm('¿Estás seguro de querer borrar este producto?')) return
+  const handleConfirmDeleteProduct = async () => {
+    if (!currentOrg || !productToDelete) return
+    const productName = productToDelete.name
+    setIsDeletingProduct(true)
+    setDeleteProductError(null)
 
-    const res = await deleteProduct(productId, currentOrg.id)
+    const res = await deleteProduct(productToDelete.id, currentOrg.id)
     if (res?.error) {
-      alert(res.error)
+      setDeleteProductError(res.error)
+      toast.error(res.error, 'Error al borrar producto')
+      setIsDeletingProduct(false)
     } else {
-      setProducts(products.filter(p => p.id !== productId))
+      setProducts(products.filter(p => p.id !== productToDelete.id))
+      setProductToDelete(null)
+      setIsDeletingProduct(false)
+      toast.success(`El producto "${productName}" fue eliminado del inventario.`, 'Producto eliminado')
     }
   }
 
@@ -121,8 +133,19 @@ function StockContent() {
         warehouses={warehouses}
         onClose={() => setBulkActionConfig(null)}
         onSuccess={() => {
+          const actionDone = bulkActionConfig
+          const count = selectedIds.length
           setBulkActionConfig(null)
           setSelectedIds([])
+          if (actionDone === 'delete') {
+            toast.success(`Se eliminaron ${count} productos correctamente.`, 'Productos eliminados')
+          } else if (actionDone === 'price') {
+            toast.success(`Se actualizaron los precios de ${count} productos.`, 'Precios actualizados')
+          } else if (actionDone === 'category') {
+            toast.success(`Se actualizó la categoría de ${count} productos.`, 'Categoría actualizada')
+          } else if (actionDone === 'stock') {
+            toast.success(`Se ajustó el stock de ${count} productos.`, 'Stock actualizado')
+          }
           if (currentOrg) loadData(currentOrg.id)
         }}
       />
@@ -358,8 +381,11 @@ function StockContent() {
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(product.id)}
-                            className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            onClick={() => {
+                              setDeleteProductError(null)
+                              setProductToDelete(product)
+                            }}
+                            className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
                             title="Borrar producto"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -401,6 +427,71 @@ function StockContent() {
             <button onClick={() => setSelectedIds([])} className="p-2 text-neutral-500 hover:text-white hover:bg-white/5 rounded-lg ml-1 transition-colors">
               <X className="w-4 h-4" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para borrar producto */}
+      {productToDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150"
+          onClick={() => !isDeletingProduct && setProductToDelete(null)}
+        >
+          <div
+            className="relative w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-white">¿Borrar producto?</h3>
+                <p className="text-sm text-neutral-400 mt-1">
+                  ¿Estás seguro de que querés borrar{' '}
+                  <strong className="text-white font-semibold">"{productToDelete.name}"</strong>?
+                </p>
+                <p className="text-xs text-neutral-500 mt-2">
+                  Esta acción eliminará el producto del inventario.
+                </p>
+              </div>
+            </div>
+
+            {deleteProductError && (
+              <div className="mt-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{deleteProductError}</span>
+              </div>
+            )}
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setProductToDelete(null)}
+                disabled={isDeletingProduct}
+                className="px-4 py-2 rounded-xl text-sm font-medium text-neutral-300 hover:text-white bg-neutral-800/80 hover:bg-neutral-800 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteProduct}
+                disabled={isDeletingProduct}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white bg-rose-600 hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/20 cursor-pointer disabled:opacity-50"
+              >
+                {isDeletingProduct ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Borrando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Borrar
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

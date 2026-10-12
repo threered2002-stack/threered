@@ -53,40 +53,83 @@ export async function createSale(orgId: string, input: {
     return { success: false, error: error.message }
   }
 
-  // Integración con Finanzas: Si el pago fue a cuenta corriente, crear la deuda
-  const hasCtaCte = input.payments.find(p => p.reference === 'cuenta_corriente')
-  if (hasCtaCte && input.customer_id) {
-    // Calculamos la fecha de vencimiento a 30 días por defecto
-    const dueDate = new Date()
-    dueDate.setDate(dueDate.getDate() + 30)
+  const saleId = data
 
-    const supabaseAdmin = await createClient() // Necesario para reusar el client en otra acción si llamamos el servicio
-    const { data: userResponse } = await supabaseAdmin.auth.getUser()
-    
-    if (userResponse?.user) {
-      const { error: arError } = await supabaseAdmin
-        .from('accounts_receivable')
-        .insert({
-          organization_id: orgId,
-          customer_id: input.customer_id,
-          amount_cents: hasCtaCte.amount_cents,
-          received_cents: 0,
-          due_date: dueDate.toISOString().split('T')[0],
-          status: 'pending',
-          notes: `Venta generada desde el Punto de Venta (Referencia automática)`,
-          created_by: userResponse.user.id
-        })
+  // Consultar número de venta generado
+  const { data: saleRecord } = await supabase
+    .from('sales')
+    .select('sale_number')
+    .eq('id', saleId)
+    .single()
+  const saleNumber = saleRecord?.sale_number || ''
 
-      if (arError) {
-        console.error('Error al registrar Cuenta por Cobrar:', arError)
-        // No fallamos la venta si falló la cuenta por cobrar, pero idealmente sería transaccional
+  // Integración con Finanzas
+  try {
+    const [{ data: financeAccs }, { data: salesCat }] = await Promise.all([
+      supabase.from('finance_accounts').select('*').eq('organization_id', orgId).eq('is_active', true),
+      supabase.from('finance_categories').select('*').eq('organization_id', orgId).eq('type', 'income').limit(1).maybeSingle()
+    ])
+
+    let cashAcc = financeAccs?.find(a => a.account_type === 'cash') || financeAccs?.[0]
+    let bankAcc = financeAccs?.find(a => a.account_type === 'bank' || a.account_type === 'digital_wallet') || cashAcc
+    const todayStr = new Date().toISOString().split('T')[0]
+
+    for (const payment of input.payments) {
+      const isCtaCte = payment.reference === 'cuenta_corriente' || payment.payment_method === 'account'
+
+      if (isCtaCte) {
+        if (input.customer_id) {
+          const dueDate = new Date()
+          dueDate.setDate(dueDate.getDate() + 30)
+
+          await supabase.from('accounts_receivable').insert({
+            organization_id: orgId,
+            customer_id: input.customer_id,
+            sale_id: saleId,
+            amount_cents: payment.amount_cents,
+            received_cents: 0,
+            due_date: dueDate.toISOString().split('T')[0],
+            status: 'pending',
+            notes: `Venta #${saleNumber} (Cuenta Corriente)`,
+            created_by: input.seller_id
+          })
+        }
+      } else {
+        const targetAcc = (payment.payment_method === 'card' || payment.payment_method === 'transfer')
+          ? bankAcc
+          : cashAcc
+
+        if (targetAcc && payment.amount_cents > 0) {
+          const methodLabel = payment.payment_method === 'cash' ? 'Efectivo'
+            : payment.payment_method === 'card' ? 'Tarjeta'
+            : payment.payment_method === 'transfer' ? 'Transferencia'
+            : 'Cobro'
+
+          await supabase.from('finance_transactions').insert({
+            organization_id: orgId,
+            account_id: targetAcc.id,
+            category_id: salesCat?.id,
+            type: 'income',
+            amount_cents: payment.amount_cents,
+            description: `Venta #${saleNumber} (${methodLabel})`,
+            reference_type: 'sale',
+            reference_id: saleId,
+            transaction_date: todayStr,
+            created_by: input.seller_id
+          })
+        }
       }
     }
+  } catch (finErr) {
+    console.error('Error sincronizando con Finanzas:', finErr)
   }
 
   revalidatePath('/sales')
   revalidatePath('/stock')
   revalidatePath('/customers')
+  revalidatePath('/finance')
+  revalidatePath('/finance/transactions')
+  revalidatePath('/finance/accounts')
   revalidatePath('/finance/payables-receivables')
   revalidatePath('/reports')
   

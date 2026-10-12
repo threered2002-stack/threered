@@ -3,6 +3,7 @@ import { Inter, Geist } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/providers/auth-provider"
 import { OrgProvider } from "@/providers/org-provider"
+import { ToastProvider } from "@/providers/toast-provider"
 import { cn } from "@/lib/utils";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
@@ -28,7 +29,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col font-sans antialiased bg-neutral-950 text-neutral-50">
         <AuthProvider>
           <OrgProvider>
-            {children}
+            <ToastProvider>
+              {children}
+            </ToastProvider>
           </OrgProvider>
         </AuthProvider>
       </body>

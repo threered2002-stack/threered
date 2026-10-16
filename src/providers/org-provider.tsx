@@ -105,9 +105,10 @@ export function OrgProvider({ children }: { children: ReactNode }) {
 
   // Cargar módulos cuando cambia la org
   useEffect(() => {
-    // Guardar en localStorage
+    // Guardar en localStorage y cookies para componentes de servidor
     if (currentOrgId && typeof window !== 'undefined') {
       localStorage.setItem(ORG_STORAGE_KEY, currentOrgId)
+      document.cookie = `${ORG_STORAGE_KEY}=${encodeURIComponent(currentOrgId)}; path=/; max-age=31536000; SameSite=Lax`
     }
 
     if (currentOrgId) {

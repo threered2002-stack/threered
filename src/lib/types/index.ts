@@ -7,10 +7,26 @@
 export interface Profile {
   id: string
   full_name: string
+  email?: string | null
   avatar_url: string | null
   phone: string | null
   created_at: string
   updated_at: string
+}
+
+export interface OrganizationInvitation {
+  id: string
+  organization_id: string
+  email: string
+  role_id: string
+  invited_by: string
+  status: 'pending' | 'accepted' | 'rejected' | 'expired' | 'canceled'
+  token: string
+  expires_at: string
+  created_at: string
+  updated_at: string
+  role?: Role
+  inviter?: Profile
 }
 
 export interface Organization {

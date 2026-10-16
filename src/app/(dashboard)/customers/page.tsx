@@ -1,5 +1,5 @@
 import { getCustomers } from '@/modules/customers/actions/customers'
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/modules/core/actions/organizations'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Users, Plus, Search, Filter, Mail, Phone, ShoppingCart } from 'lucide-react'
@@ -7,18 +7,7 @@ import { ModuleGuard } from '@/components/layout/module-guard'
 import { CustomerRow } from './customer-row'
 
 export default async function CustomersPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) redirect('/login')
-
-  const { data: membership } = await supabase
-    .from('memberships')
-    .select('organization_id')
-    .eq('user_id', user.id)
-    .eq('is_active', true)
-    .single()
-
+  const membership = await getActiveMembership()
   if (!membership) redirect('/org/new')
 
   const customers = await getCustomers(membership.organization_id)

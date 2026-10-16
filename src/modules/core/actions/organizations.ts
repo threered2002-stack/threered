@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 import {
   createOrganizationSchema,
   updateOrganizationSchema,
@@ -274,3 +275,51 @@ export async function getTemplates() {
   if (error) return []
   return data
 }
+
+/**
+  * Obtiene la membresía activa actual basándose en la cookie seleccionada o primera disponible
+  */
+export async function getActiveMembership(): Promise<Membership | null> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return null
+
+  const cookieStore = await cookies()
+  const currentOrgId = cookieStore.get('padre_current_org')?.value
+
+  if (currentOrgId) {
+    const { data: membership } = await supabase
+      .from('memberships')
+      .select(`
+        *,
+        organization:organizations(*),
+        role:roles(*)
+      `)
+      .eq('user_id', user.id)
+      .eq('organization_id', currentOrgId)
+      .eq('is_active', true)
+      .maybeSingle()
+
+    if (membership) return membership as Membership
+  }
+
+  // Fallback a primera membresía activa del usuario
+  const { data: memberships } = await supabase
+    .from('memberships')
+    .select(`
+      *,
+      organization:organizations(*),
+      role:roles(*)
+    `)
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+    .limit(1)
+
+  if (memberships && memberships.length > 0) {
+    return memberships[0] as Membership
+  }
+
+  return null
+}
+

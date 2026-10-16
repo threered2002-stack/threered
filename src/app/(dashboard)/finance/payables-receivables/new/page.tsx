@@ -1,23 +1,15 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/modules/core/actions/organizations'
 import { redirect } from 'next/navigation'
 import { ManualDebtForm } from './form'
 
 export default async function NewDebtPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) redirect('/login')
-
-  const { data: membership } = await supabase
-    .from('memberships')
-    .select('organization_id')
-    .eq('user_id', user.id)
-    .eq('is_active', true)
-    .single()
-
+  const membership = await getActiveMembership()
   if (!membership) redirect('/org/new')
+
+  const supabase = await createClient()
 
   // Fetch customers and suppliers
   const [{ data: customers }, { data: suppliers }] = await Promise.all([

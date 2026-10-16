@@ -1,6 +1,5 @@
 import { getAccounts, getTransactions, getFinanceSummary, syncFinanceData } from '@/modules/finance/actions/finance'
-import { getUserMembership } from '@/modules/core/actions/organizations'
-import { createClient } from '@/lib/supabase/server'
+import { getActiveMembership } from '@/modules/core/actions/organizations'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, ArrowUpRight, ArrowDownRight, Wallet, Landmark, CreditCard, Activity, PieChart } from 'lucide-react'
@@ -9,19 +8,7 @@ import { FinancePieChart } from '@/components/finance/finance-charts'
 import { SyncFinanceButton } from '@/components/finance/sync-button'
 
 export default async function FinancePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) redirect('/login')
-
-  // Necesitamos saber qué organización está activa para este usuario
-  const { data: membership } = await supabase
-    .from('memberships')
-    .select('organization_id')
-    .eq('user_id', user.id)
-    .eq('is_active', true)
-    .single()
-
+  const membership = await getActiveMembership()
   if (!membership) redirect('/org/new')
 
   const orgId = membership.organization_id

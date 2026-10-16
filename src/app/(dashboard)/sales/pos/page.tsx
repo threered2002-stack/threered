@@ -24,7 +24,7 @@ export default async function POSPage() {
         products={products || []} 
         customers={customers || []} 
         warehouses={warehouses || []}
-        userId={user.id}
+        userId={membership.user_id}
         orgId={membership.organization_id}
       />
     </ModuleGuard>

@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, Minus, Trash2, User, CreditCard, Banknote, ShoppingCart, ArrowRight, Package } from 'lucide-react'
+import { Search, Plus, Minus, Trash2, User, CreditCard, Banknote, ShoppingCart, ArrowRight, Package, UserPlus, Check, X, Phone, Mail, FileText, ChevronDown, Loader2 } from 'lucide-react'
 import { createSale } from '@/modules/sales/actions/sales'
+import { createCustomer } from '@/modules/customers/actions/customers'
+import { useToast } from '@/providers/toast-provider'
 
 interface POSClientProps {
   products: any[]
@@ -13,12 +15,47 @@ interface POSClientProps {
   orgId: string
 }
 
-export function POSClient({ products, customers, warehouses, userId, orgId }: POSClientProps) {
+export function POSClient({ products, customers: initialCustomers, warehouses, userId, orgId }: POSClientProps) {
   const router = useRouter()
+  const { toast } = useToast()
+  const [customersList, setCustomersList] = useState<any[]>(initialCustomers)
   const [cart, setCart] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'transfer' | 'account'>('cash')
+
+  // Customer search & dropdown state
+  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false)
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('')
+  const customerDropdownRef = useRef<HTMLDivElement>(null)
+
+  // Quick Customer Create Modal state
+  const [isQuickCustomerModalOpen, setIsQuickCustomerModalOpen] = useState(false)
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false)
+  const [newCustomerForm, setNewCustomerForm] = useState({
+    first_name: '',
+    last_name: '',
+    phone: '',
+    email: '',
+    document_number: '',
+    notes: ''
+  })
+  const [customerCreateError, setCustomerCreateError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setCustomersList(initialCustomers)
+  }, [initialCustomers])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target as Node)) {
+        setIsCustomerDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const defaultWarehouse = warehouses.find(w => w.is_default) || warehouses[0]
 
@@ -28,6 +65,72 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
       currency: 'ARS',
       minimumFractionDigits: 2
     }).format(cents / 100)
+  }
+
+  const selectedCustomerObj = customersList.find(c => c.id === selectedCustomer)
+
+  const filteredCustomers = customersList.filter(c => {
+    if (!customerSearchQuery.trim()) return true
+    const q = customerSearchQuery.toLowerCase()
+    const fullName = `${c.first_name || ''} ${c.last_name || ''}`.toLowerCase()
+    const doc = (c.document_number || '').toLowerCase()
+    const phone = (c.phone || '').toLowerCase()
+    const email = (c.email || '').toLowerCase()
+    return fullName.includes(q) || doc.includes(q) || phone.includes(q) || email.includes(q)
+  })
+
+  const handleOpenQuickCustomer = (initialName: string = '') => {
+    const parts = initialName.trim().split(' ')
+    const firstName = parts[0] || ''
+    const lastName = parts.slice(1).join(' ') || ''
+    setNewCustomerForm({
+      first_name: firstName,
+      last_name: lastName,
+      phone: '',
+      email: '',
+      document_number: '',
+      notes: ''
+    })
+    setCustomerCreateError(null)
+    setIsQuickCustomerModalOpen(true)
+    setIsCustomerDropdownOpen(false)
+  }
+
+  const handleCreateCustomerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newCustomerForm.first_name.trim()) {
+      setCustomerCreateError('El nombre es obligatorio')
+      return
+    }
+
+    setIsCreatingCustomer(true)
+    setCustomerCreateError(null)
+
+    try {
+      const res = await createCustomer(orgId, {
+        first_name: newCustomerForm.first_name.trim(),
+        last_name: newCustomerForm.last_name.trim() || undefined,
+        phone: newCustomerForm.phone.trim() || undefined,
+        email: newCustomerForm.email.trim() || undefined,
+        document_number: newCustomerForm.document_number.trim() || undefined,
+        notes: newCustomerForm.notes.trim() || undefined,
+      })
+
+      if (res.error) {
+        setCustomerCreateError(res.error)
+      } else if (res.data) {
+        const created = res.data
+        setCustomersList(prev => [created, ...prev])
+        setSelectedCustomer(created.id)
+        setIsQuickCustomerModalOpen(false)
+        setCustomerSearchQuery('')
+        toast.success(`Cliente ${created.first_name} ${created.last_name || ''} creado y seleccionado.`, 'Cliente registrado')
+      }
+    } catch {
+      setCustomerCreateError('Error inesperado al crear el cliente')
+    } finally {
+      setIsCreatingCustomer(false)
+    }
   }
 
   const addToCart = (product: any) => {
@@ -90,14 +193,13 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
   const handleCheckout = async () => {
     if (cart.length === 0 || !defaultWarehouse) return
     if (paymentMethod === 'account' && !selectedCustomer) {
-      alert('Debe seleccionar un cliente para cobrar con Cuenta Corriente.')
+      toast.error('Debe seleccionar un cliente para cobrar con Cuenta Corriente.', 'Cliente requerido')
       return
     }
 
     setIsProcessing(true)
 
     try {
-      // Usar un session temporal si no hay (en un MVP) o null
       const res = await createSale(orgId, {
         customer_id: selectedCustomer || undefined,
         seller_id: userId,
@@ -116,16 +218,16 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
       })
 
       if (res.success) {
-        alert('Venta registrada con éxito')
+        toast.success(`Venta registrada exitosamente por ${formatCurrency(total)}.`, 'Venta completada')
         setCart([])
         setSelectedCustomer(null)
         setSearch('')
         router.refresh()
       } else {
-        alert('Error al registrar la venta: ' + res.error)
+        toast.error('Error al registrar la venta: ' + res.error, 'Error de venta')
       }
-    } catch (e) {
-      alert('Error inesperado')
+    } catch {
+      toast.error('Ocurrió un error inesperado al procesar la venta.', 'Error')
     } finally {
       setIsProcessing(false)
     }
@@ -208,23 +310,168 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
           </h2>
         </div>
 
-        {/* Customer Select */}
-        <div className="p-4 border-b border-neutral-800/50">
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
-            <select
-              value={selectedCustomer || ''}
-              onChange={(e) => setSelectedCustomer(e.target.value || null)}
-              className="w-full pl-9 pr-4 py-2.5 bg-neutral-800/50 border border-neutral-700 rounded-xl text-white appearance-none focus:ring-2 focus:ring-red-500/40 transition-all text-sm"
+        {/* Customer Search & Select Combobox */}
+        <div className="p-4 border-b border-neutral-800/60 bg-neutral-900/40 relative" ref={customerDropdownRef}>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5 text-red-400" />
+              Cliente
+            </span>
+            <button
+              type="button"
+              onClick={() => handleOpenQuickCustomer(customerSearchQuery)}
+              className="text-[11px] font-semibold text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors cursor-pointer group"
+              title="Registrar nuevo cliente"
             >
-              <option value="">Consumidor Final</option>
-              {customers.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.full_name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Cliente'}
-                </option>
-              ))}
-            </select>
+              <UserPlus className="w-3 h-3 group-hover:scale-110 transition-transform" />
+              <span>+ Nuevo</span>
+            </button>
           </div>
+
+          {/* Trigger button or current selected card */}
+          {selectedCustomerObj ? (
+            <div className="flex items-center justify-between p-2.5 bg-neutral-800/80 border border-neutral-700/80 rounded-xl">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400 font-bold text-xs shrink-0">
+                  {(selectedCustomerObj.first_name || 'C').charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white text-xs font-semibold truncate leading-tight">
+                    {selectedCustomerObj.full_name || `${selectedCustomerObj.first_name || ''} ${selectedCustomerObj.last_name || ''}`.trim()}
+                  </p>
+                  <p className="text-[11px] text-neutral-400 truncate">
+                    {selectedCustomerObj.phone || (selectedCustomerObj.document_number ? `DNI: ${selectedCustomerObj.document_number}` : selectedCustomerObj.email || 'Registrado')}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0 ml-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
+                  className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-700/50 rounded-lg transition-colors cursor-pointer"
+                  title="Cambiar cliente"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCustomer(null)}
+                  className="p-1.5 text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
+                  title="Quitar cliente (Consumidor Final)"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={() => setIsCustomerDropdownOpen(true)}
+              className="flex items-center justify-between px-3 py-2 bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/80 rounded-xl cursor-pointer transition-all group"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <User className="w-4 h-4 text-neutral-500 group-hover:text-neutral-400 transition-colors shrink-0" />
+                <span className="text-xs text-neutral-300 font-medium truncate">Consumidor Final</span>
+              </div>
+              <span className="text-[11px] text-neutral-500 group-hover:text-neutral-400 flex items-center gap-1">
+                Buscar <ChevronDown className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          )}
+
+          {/* Dropdown Menu with Live Search */}
+          {isCustomerDropdownOpen && (
+            <div className="absolute left-4 right-4 top-full mt-1.5 bg-neutral-900 border border-neutral-700/90 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div className="p-2.5 border-b border-neutral-800 bg-neutral-950/70">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500" />
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Buscar por nombre, DNI o teléfono..."
+                    value={customerSearchQuery}
+                    onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                    className="w-full pl-8 pr-7 py-1.5 bg-neutral-900 border border-neutral-700 rounded-lg text-white text-xs placeholder:text-neutral-500 focus:outline-none focus:border-red-500"
+                  />
+                  {customerSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setCustomerSearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="max-h-56 overflow-y-auto p-1.5 space-y-0.5">
+                {/* Consumidor Final default option */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCustomer(null)
+                    setIsCustomerDropdownOpen(false)
+                    setCustomerSearchQuery('')
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                    selectedCustomer === null
+                      ? 'bg-red-500/15 text-red-300 font-medium'
+                      : 'text-neutral-300 hover:bg-neutral-800'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <User className="w-3.5 h-3.5 text-neutral-400" />
+                    <span>Consumidor Final (Sin asignar)</span>
+                  </div>
+                  {selectedCustomer === null && <Check className="w-3.5 h-3.5 text-red-400" />}
+                </button>
+
+                {/* Filtered Customer items */}
+                {filteredCustomers.map((c) => {
+                  const name = c.full_name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Cliente'
+                  const isSelected = selectedCustomer === c.id
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCustomer(c.id)
+                        setIsCustomerDropdownOpen(false)
+                        setCustomerSearchQuery('')
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-red-500/15 text-red-300 font-medium'
+                          : 'text-neutral-300 hover:bg-neutral-800'
+                      }`}
+                    >
+                      <div className="min-w-0 pr-2">
+                        <p className="font-semibold text-white truncate">{name}</p>
+                        <p className="text-[11px] text-neutral-400 truncate">
+                          {c.phone ? `Tel: ${c.phone}` : (c.document_number ? `DNI: ${c.document_number}` : c.email || 'Sin datos adicionales')}
+                        </p>
+                      </div>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-red-400 shrink-0" />}
+                    </button>
+                  )
+                })}
+
+                {filteredCustomers.length === 0 && customerSearchQuery.trim() !== '' && (
+                  <div className="p-3 text-center">
+                    <p className="text-xs text-neutral-400 mb-2">No se encontró "{customerSearchQuery}"</p>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenQuickCustomer(customerSearchQuery)}
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-sm"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      Crear "{customerSearchQuery}"
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Cart Items */}
@@ -323,13 +570,151 @@ export function POSClient({ products, customers, warehouses, userId, orgId }: PO
           <button
             onClick={handleCheckout}
             disabled={cart.length === 0 || isProcessing}
-            className="w-full py-4 bg-red-600 hover:bg-red-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-red-500/20 disabled:shadow-none flex items-center justify-center gap-2 text-lg"
+            className="w-full py-4 bg-red-600 hover:bg-red-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-red-500/20 disabled:shadow-none flex items-center justify-center gap-2 text-lg cursor-pointer"
           >
             {isProcessing ? 'Procesando...' : 'Confirmar Pago'}
             {!isProcessing && <ArrowRight className="w-5 h-5" />}
           </button>
         </div>
       </div>
+
+      {/* Quick Customer Creation Modal */}
+      {isQuickCustomerModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+          <div
+            className="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-neutral-900/70">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400">
+                  <UserPlus className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Nuevo Cliente Rápido</h3>
+                  <p className="text-[11px] text-neutral-400">Creá el cliente y continualo en la venta</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsQuickCustomerModalOpen(false)}
+                className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleCreateCustomerSubmit} className="p-6 space-y-4">
+              {customerCreateError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs">
+                  {customerCreateError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-400 mb-1">
+                    Nombre <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    autoFocus
+                    placeholder="Ej. Juan"
+                    value={newCustomerForm.first_name}
+                    onChange={(e) => setNewCustomerForm(prev => ({ ...prev, first_name: e.target.value }))}
+                    className="w-full px-3 py-2 bg-neutral-800/70 border border-neutral-700 rounded-xl text-white text-xs focus:outline-none focus:border-red-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-400 mb-1">
+                    Apellido
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Pérez"
+                    value={newCustomerForm.last_name}
+                    onChange={(e) => setNewCustomerForm(prev => ({ ...prev, last_name: e.target.value }))}
+                    className="w-full px-3 py-2 bg-neutral-800/70 border border-neutral-700 rounded-xl text-white text-xs focus:outline-none focus:border-red-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-400 mb-1 flex items-center gap-1">
+                    <Phone className="w-3 h-3 text-neutral-500" />
+                    Teléfono / Celular
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="11 2345-6789"
+                    value={newCustomerForm.phone}
+                    onChange={(e) => setNewCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-3 py-2 bg-neutral-800/70 border border-neutral-700 rounded-xl text-white text-xs focus:outline-none focus:border-red-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-400 mb-1 flex items-center gap-1">
+                    <FileText className="w-3 h-3 text-neutral-500" />
+                    DNI / CUIT
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="35123456"
+                    value={newCustomerForm.document_number}
+                    onChange={(e) => setNewCustomerForm(prev => ({ ...prev, document_number: e.target.value }))}
+                    className="w-full px-3 py-2 bg-neutral-800/70 border border-neutral-700 rounded-xl text-white text-xs focus:outline-none focus:border-red-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-neutral-400 mb-1 flex items-center gap-1">
+                  <Mail className="w-3 h-3 text-neutral-500" />
+                  Email (Opcional)
+                </label>
+                <input
+                  type="email"
+                  placeholder="juan@email.com"
+                  value={newCustomerForm.email}
+                  onChange={(e) => setNewCustomerForm(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-3 py-2 bg-neutral-800/70 border border-neutral-700 rounded-xl text-white text-xs focus:outline-none focus:border-red-500"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsQuickCustomerModalOpen(false)}
+                  className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingCustomer}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-red-500/20 cursor-pointer"
+                >
+                  {isCreatingCustomer ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      Guardar y Seleccionar
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

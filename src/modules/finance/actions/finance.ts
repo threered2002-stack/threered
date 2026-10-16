@@ -203,8 +203,7 @@ export async function createAccountPayable(orgId: string, input: {
       paid_cents: 0,
       due_date: input.due_date,
       status: 'pending',
-      notes: input.notes,
-      created_by: user.id
+      notes: input.notes
     })
     .select()
     .single()
@@ -238,8 +237,7 @@ export async function createAccountReceivable(orgId: string, input: {
       received_cents: 0,
       due_date: input.due_date,
       status: 'pending',
-      notes: input.notes,
-      created_by: user.id
+      notes: input.notes
     })
     .select()
     .single()
@@ -352,11 +350,9 @@ export async function syncFinanceData(orgId: string) {
 
     const existingSaleTxIds = new Set(existingSaleTx?.map(t => t.reference_id) || [])
 
-    // 5. For each unsynced sale, register payments and transactions
+    // 5. For each sale, register Cta Cte (accounts_receivable) and financial transactions
     if (sales && sales.length > 0) {
       for (const sale of sales) {
-        if (existingSaleTxIds.has(sale.id)) continue
-
         const { data: payments } = await supabase
           .from('sale_payments')
           .select('*')
@@ -387,11 +383,10 @@ export async function syncFinanceData(orgId: string) {
                   received_cents: 0,
                   due_date: dueDate.toISOString().split('T')[0],
                   status: 'pending',
-                  notes: `Venta #${sale.sale_number} (Cuenta Corriente)`,
-                  created_by: user.id
+                  notes: `Venta #${sale.sale_number} (Cuenta Corriente)`
                 })
               }
-            } else {
+            } else if (!existingSaleTxIds.has(sale.id)) {
               const targetAccount = (payment.payment_method === 'card' || payment.payment_method === 'transfer')
                 ? (defaultBankAccount || defaultCashAccount)
                 : (defaultCashAccount || defaultBankAccount)
@@ -417,7 +412,7 @@ export async function syncFinanceData(orgId: string) {
               }
             }
           }
-        } else if (sale.total_cents > 0 && fallbackAccount) {
+        } else if (!existingSaleTxIds.has(sale.id) && sale.total_cents > 0 && fallbackAccount) {
           await supabase.from('finance_transactions').insert({
             organization_id: orgId,
             account_id: fallbackAccount.id,
@@ -461,8 +456,7 @@ export async function syncFinanceData(orgId: string) {
             paid_cents: 0,
             due_date: dueDate,
             status: 'pending',
-            notes: `Orden de Compra #${po.order_number || ''}`,
-            created_by: user.id
+            notes: `Orden de Compra #${po.order_number || ''}`
           })
         }
       }

@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useOrg } from '@/providers/org-provider'
+import { useToast } from '@/providers/toast-provider'
 import { createSupplier, updateSupplier } from '@/modules/purchases/actions/purchases'
-import { X, Save, Loader2, Building2 } from 'lucide-react'
+import { X, Save, Loader2, Building2, Globe, FileText } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface SupplierModalProps {
@@ -14,6 +15,7 @@ interface SupplierModalProps {
 
 export function SupplierModal({ supplier, isOpen, onClose }: SupplierModalProps) {
   const { currentOrg } = useOrg()
+  const { toast } = useToast()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -29,12 +31,18 @@ export function SupplierModal({ supplier, isOpen, onClose }: SupplierModalProps)
     province: '',
     contact_name: '',
     contact_phone: '',
-    notes: ''
+    notes: '',
+    whatsapp: '',
+    instagram: '',
+    facebook: '',
+    website: '',
+    catalog_url: ''
   })
 
   useEffect(() => {
     if (isOpen) {
       if (supplier) {
+        const meta = supplier.metadata || {}
         setFormData({
           name: supplier.name || '',
           trade_name: supplier.trade_name || '',
@@ -46,7 +54,12 @@ export function SupplierModal({ supplier, isOpen, onClose }: SupplierModalProps)
           province: supplier.province || '',
           contact_name: supplier.contact_name || '',
           contact_phone: supplier.contact_phone || '',
-          notes: supplier.notes || ''
+          notes: supplier.notes || '',
+          whatsapp: meta.whatsapp || supplier.contact_phone || supplier.phone || '',
+          instagram: meta.instagram || '',
+          facebook: meta.facebook || '',
+          website: meta.website || '',
+          catalog_url: meta.catalog_url || ''
         })
       } else {
         setFormData({
@@ -60,7 +73,12 @@ export function SupplierModal({ supplier, isOpen, onClose }: SupplierModalProps)
           province: '',
           contact_name: '',
           contact_phone: '',
-          notes: ''
+          notes: '',
+          whatsapp: '',
+          instagram: '',
+          facebook: '',
+          website: '',
+          catalog_url: ''
         })
       }
       setError(null)
@@ -89,19 +107,47 @@ export function SupplierModal({ supplier, isOpen, onClose }: SupplierModalProps)
     setIsLoading(true)
     setError(null)
 
+    const finalWhatsapp = formData.whatsapp.trim()
+    let finalPhone = formData.phone.trim()
+
+    const prevWhatsapp = (supplier?.metadata?.whatsapp || '').trim()
+    const prevPhone = (supplier?.phone || '').trim()
+
+    // Sincronización inteligente: Si el usuario ingresó/modificó el celular/WhatsApp,
+    // y el campo de teléfono principal estaba vacío o era idéntico al anterior,
+    // sincronizarlo con el nuevo celular para mantener consistencia en toda la plataforma.
+    if (finalWhatsapp && (!finalPhone || finalPhone === prevWhatsapp || finalPhone === prevPhone)) {
+      finalPhone = finalWhatsapp
+    }
+
+    const payload = {
+      ...formData,
+      phone: finalPhone || undefined,
+      metadata: {
+        ...(supplier?.metadata || {}),
+        whatsapp: finalWhatsapp,
+        instagram: formData.instagram.trim(),
+        facebook: formData.facebook.trim(),
+        website: formData.website.trim(),
+        catalog_url: formData.catalog_url.trim()
+      }
+    }
+
     try {
       if (supplier) {
-        const res = await updateSupplier(supplier.id, currentOrg.id, formData)
+        const res = await updateSupplier(supplier.id, currentOrg.id, payload)
         if (!res.success) {
           setError(res.error || 'Error al actualizar el proveedor')
           return
         }
+        toast.success(`Proveedor "${formData.trade_name || formData.name}" actualizado con éxito.`, 'Proveedor actualizado')
       } else {
-        const res = await createSupplier(currentOrg.id, formData)
+        const res = await createSupplier(currentOrg.id, payload)
         if (!res.success) {
           setError(res.error || 'Error al crear el proveedor')
           return
         }
+        toast.success(`Proveedor "${formData.trade_name || formData.name}" creado con éxito.`, 'Proveedor creado')
       }
 
       router.refresh()
@@ -215,14 +261,14 @@ export function SupplierModal({ supplier, isOpen, onClose }: SupplierModalProps)
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-neutral-400 mb-1.5">
-                Teléfono
+                Teléfono Fijo / Empresa (Opcional)
               </label>
               <input
                 type="text"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="+54 11 4455-6677"
+                placeholder="Ej. +54 11 4455-6677"
                 className="w-full px-3.5 py-2.5 bg-neutral-800/60 border border-neutral-700/80 rounded-xl text-white text-sm focus:border-red-500 focus:outline-none transition-all placeholder:text-neutral-600"
               />
             </div>
@@ -268,6 +314,89 @@ export function SupplierModal({ supplier, isOpen, onClose }: SupplierModalProps)
                 placeholder="Mendoza"
                 className="w-full px-3.5 py-2.5 bg-neutral-800/60 border border-neutral-700/80 rounded-xl text-white text-sm focus:border-red-500 focus:outline-none transition-all placeholder:text-neutral-600"
               />
+            </div>
+          </div>
+
+          {/* Sección Canales Digitales */}
+          <div className="p-4 rounded-2xl bg-neutral-800/40 border border-neutral-700/60 space-y-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-white">
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              Canales Digitales & Redes Sociales
+            </div>
+            <p className="text-xs text-neutral-400">
+              Configurá accesos directos para comunicarte por WhatsApp o Instagram con 1 clic.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <label className="block text-xs font-medium text-neutral-300 mb-1.5 flex items-center gap-1.5">
+                  <span className="text-emerald-400 font-semibold">Celular / WhatsApp</span> (ej: +54 9 11 2345-6789)
+                </label>
+                <input
+                  type="text"
+                  name="whatsapp"
+                  value={formData.whatsapp}
+                  onChange={handleChange}
+                  placeholder="+54 9 11 2345-6789"
+                  className="w-full px-3.5 py-2.5 bg-neutral-900/80 border border-neutral-700/80 rounded-xl text-white text-sm focus:border-emerald-500 focus:outline-none transition-all placeholder:text-neutral-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-neutral-300 mb-1.5 flex items-center gap-1.5">
+                  <span className="text-pink-400">Instagram</span> (@usuario o enlace)
+                </label>
+                <input
+                  type="text"
+                  name="instagram"
+                  value={formData.instagram}
+                  onChange={handleChange}
+                  placeholder="@bodega_ejemplo"
+                  className="w-full px-3.5 py-2.5 bg-neutral-900/80 border border-neutral-700/80 rounded-xl text-white text-sm focus:border-pink-500 focus:outline-none transition-all placeholder:text-neutral-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-neutral-300 mb-1.5 flex items-center gap-1.5">
+                  <span className="text-blue-400">Facebook</span> (página o @usuario)
+                </label>
+                <input
+                  type="text"
+                  name="facebook"
+                  value={formData.facebook}
+                  onChange={handleChange}
+                  placeholder="facebook.com/bodega_ejemplo o @bodega"
+                  className="w-full px-3.5 py-2.5 bg-neutral-900/80 border border-neutral-700/80 rounded-xl text-white text-sm focus:border-blue-500 focus:outline-none transition-all placeholder:text-neutral-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-neutral-300 mb-1.5">
+                  Sitio Web Oficial
+                </label>
+                <input
+                  type="text"
+                  name="website"
+                  value={formData.website}
+                  onChange={handleChange}
+                  placeholder="https://empresa.com"
+                  className="w-full px-3.5 py-2.5 bg-neutral-900/80 border border-neutral-700/80 rounded-xl text-white text-sm focus:border-red-500 focus:outline-none transition-all placeholder:text-neutral-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-neutral-300 mb-1.5">
+                  Catálogo / Lista Online
+                </label>
+                <input
+                  type="text"
+                  name="catalog_url"
+                  value={formData.catalog_url}
+                  onChange={handleChange}
+                  placeholder="https://drive.google.com/..."
+                  className="w-full px-3.5 py-2.5 bg-neutral-900/80 border border-neutral-700/80 rounded-xl text-white text-sm focus:border-red-500 focus:outline-none transition-all placeholder:text-neutral-600"
+                />
+              </div>
             </div>
           </div>
 

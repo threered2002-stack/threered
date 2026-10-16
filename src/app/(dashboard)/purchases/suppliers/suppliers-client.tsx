@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Plus, Search, Mail, Phone, MapPin, Edit, Trash2, Loader2, User, AlertCircle } from 'lucide-react'
+import { Building2, Plus, Search, Mail, Phone, MapPin, Edit, Trash2, Loader2, User, AlertCircle, MessageSquare } from 'lucide-react'
 import { SupplierModal } from './supplier-modal'
+import { SupplierDrawer, WhatsAppIcon, InstagramIcon, FacebookIcon } from './supplier-drawer'
 import { deleteSupplier } from '@/modules/purchases/actions/purchases'
 import { useOrg } from '@/providers/org-provider'
 import { useToast } from '@/providers/toast-provider'
@@ -18,6 +19,7 @@ export function SuppliersClient({ initialSuppliers }: SuppliersClientProps) {
   const { toast } = useToast()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingSupplier, setEditingSupplier] = useState<any | null>(null)
+  const [drawerSupplier, setDrawerSupplier] = useState<any | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [supplierToDelete, setSupplierToDelete] = useState<any | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -113,6 +115,29 @@ export function SuppliersClient({ initialSuppliers }: SuppliersClientProps) {
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredSuppliers.map((supplier) => {
+          const meta = supplier.metadata || {}
+          const rawWhatsapp = meta.whatsapp || supplier.contact_phone || supplier.phone || ''
+          const cleanPhone = rawWhatsapp.replace(/[^0-9]/g, '')
+          const instagram = (meta.instagram || '').replace('@', '').trim()
+          const rawFacebook = meta.facebook || ''
+          let cleanFb = rawFacebook.trim()
+          if (cleanFb.startsWith('http://') || cleanFb.startsWith('https://')) {
+            try {
+              const u = new URL(cleanFb)
+              cleanFb = u.pathname.replace(/^\//, '').replace(/\/$/, '')
+            } catch {}
+          }
+          cleanFb = cleanFb.replace('@', '').replace(/^facebook\.com\//, '').trim()
+          const fbUrl = cleanFb ? `https://m.me/${cleanFb}` : (rawFacebook.startsWith('http') ? rawFacebook : '')
+          const notesCount = Array.isArray(meta.notes_log) ? meta.notes_log.length : 0
+
+          let whatsappUrl = ''
+          if (cleanPhone) {
+            let finalPhone = cleanPhone
+            if (finalPhone.length === 10 && !finalPhone.startsWith('54')) finalPhone = `549${finalPhone}`
+            whatsappUrl = `https://wa.me/${finalPhone}`
+          }
+
           return (
             <div
               key={supplier.id}
@@ -174,10 +199,22 @@ export function SuppliersClient({ initialSuppliers }: SuppliersClientProps) {
                       <span className="truncate">{supplier.email}</span>
                     </div>
                   )}
-                  {supplier.phone && (
+                  {rawWhatsapp && (
+                    <div className="flex items-center gap-2 text-neutral-300">
+                      <Phone className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span className="truncate">{rawWhatsapp}</span>
+                      {supplier.phone && supplier.phone !== rawWhatsapp && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">Celular</span>
+                      )}
+                    </div>
+                  )}
+                  {supplier.phone && supplier.phone !== rawWhatsapp && (
                     <div className="flex items-center gap-2 text-neutral-400">
                       <Phone className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-                      <span>{supplier.phone}</span>
+                      <span className="truncate">{supplier.phone}</span>
+                      {rawWhatsapp && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 border border-neutral-700/50">Fijo</span>
+                      )}
                     </div>
                   )}
                   {(supplier.address || supplier.city) && (
@@ -194,6 +231,91 @@ export function SuppliersClient({ initialSuppliers }: SuppliersClientProps) {
                     </p>
                   )}
                 </div>
+              </div>
+
+              {/* Card Bottom: Quick Communications & Drawer Hub */}
+              <div className="pt-3.5 mt-3.5 border-t border-neutral-800/80 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  {whatsappUrl ? (
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      title={`Abrir WhatsApp (${rawWhatsapp})`}
+                      className="p-2 text-emerald-400 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 rounded-xl transition-all flex items-center justify-center cursor-pointer"
+                    >
+                      <WhatsAppIcon className="w-4 h-4" />
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setDrawerSupplier(supplier)}
+                      title="Configurar WhatsApp"
+                      className="p-2 text-neutral-600 hover:text-neutral-400 bg-neutral-900 border border-neutral-800 rounded-xl transition-all flex items-center justify-center cursor-pointer"
+                    >
+                      <WhatsAppIcon className="w-4 h-4 opacity-40" />
+                    </button>
+                  )}
+
+                  {instagram ? (
+                    <a
+                      href={`https://ig.me/m/${instagram}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      title={`Abrir Instagram (@${instagram})`}
+                      className="p-2 text-pink-400 hover:text-white bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/25 rounded-xl transition-all flex items-center justify-center cursor-pointer"
+                    >
+                      <InstagramIcon className="w-4 h-4" />
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setDrawerSupplier(supplier)}
+                      title="Configurar Instagram"
+                      className="p-2 text-neutral-600 hover:text-neutral-400 bg-neutral-900 border border-neutral-800 rounded-xl transition-all flex items-center justify-center cursor-pointer"
+                    >
+                      <InstagramIcon className="w-4 h-4 opacity-40" />
+                    </button>
+                  )}
+
+                  {fbUrl ? (
+                    <a
+                      href={fbUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      title={`Abrir Facebook / Messenger (${cleanFb || rawFacebook})`}
+                      className="p-2 text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/25 rounded-xl transition-all flex items-center justify-center cursor-pointer"
+                    >
+                      <FacebookIcon className="w-4 h-4" />
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setDrawerSupplier(supplier)}
+                      title="Configurar Facebook"
+                      className="p-2 text-neutral-600 hover:text-neutral-400 bg-neutral-900 border border-neutral-800 rounded-xl transition-all flex items-center justify-center cursor-pointer"
+                    >
+                      <FacebookIcon className="w-4 h-4 opacity-40" />
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setDrawerSupplier(supplier)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800/80 hover:bg-neutral-800 hover:border-neutral-700 text-neutral-300 hover:text-white border border-neutral-700/60 rounded-xl text-xs font-medium transition-all cursor-pointer group/btn"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-neutral-400 group-hover/btn:text-emerald-400 transition-colors" />
+                  <span>Chat & Bitácora</span>
+                  {notesCount > 0 && (
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-red-500/20 text-red-300 text-[10px] font-bold">
+                      {notesCount}
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
           )
@@ -292,6 +414,17 @@ export function SuppliersClient({ initialSuppliers }: SuppliersClientProps) {
           </div>
         </div>
       )}
+
+      {/* Drawer de Comunicación y Bitácora */}
+      <SupplierDrawer
+        supplier={initialSuppliers.find(s => s.id === drawerSupplier?.id) || drawerSupplier}
+        isOpen={!!drawerSupplier}
+        onClose={() => setDrawerSupplier(null)}
+        onEditSupplier={(s) => {
+          setDrawerSupplier(null)
+          handleOpenEdit(s)
+        }}
+      />
     </div>
   )
 }
